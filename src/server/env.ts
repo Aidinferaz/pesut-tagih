@@ -13,7 +13,11 @@ const optional = z
 const schema = z
   .object({
     NEXT_PUBLIC_SITE_URL: z.url(),
-    NEXT_PUBLIC_SUPABASE_URL: z.url(),
+    /** The project URL itself (https://<ref>.supabase.co), not the REST endpoint under it. */
+    NEXT_PUBLIC_SUPABASE_URL: z.url().refine((u) => new URL(u).pathname === "/", {
+      message:
+        "Use the Supabase project URL (https://<ref>.supabase.co) without /rest/v1 or any path",
+    }),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(20),
     SUPABASE_SECRET_KEY: z.string().min(20),
     /** Development only: show an email sign-in next to Google (links land in Mailpit). */
