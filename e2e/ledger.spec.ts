@@ -125,3 +125,31 @@ test("an expense can be corrected and keeps its number", async ({ page }) => {
   await expect(row).toContainText("Rp80.000");
   await expect(page.getByRole("group").filter({ hasText: "PT-0002" })).toHaveCount(0);
 });
+
+test("a monthly bill bills this month at once and can be edited and deleted", async ({ page }) => {
+  await signIn(page, uniqueEmail("biller"));
+  await page.goto("/id/groups/new");
+  await page.getByLabel("Nama grup").fill("Kos Bulanan");
+  await page.getByRole("button", { name: "Buat grup" }).click();
+  await expect(page.getByRole("heading", { name: "Kos Bulanan", exact: true })).toBeVisible();
+
+  // Day 1 has always passed by now, so this month is billed straight away.
+  await page.getByText("Tambah tagihan bulanan").click();
+  await page.getByRole("textbox", { name: "Nama tagihan" }).fill("WiFi");
+  await page.getByRole("textbox", { name: "Jumlah per bulan" }).fill("300rb");
+  await page.getByRole("spinbutton", { name: "Tanggal tiap bulan" }).fill("1");
+  await page.getByRole("button", { name: "Tambah tagihan", exact: true }).click();
+  await expect(page.getByRole("group").filter({ hasText: "WiFi" })).toContainText("berulang");
+
+  // Editing changes next month only; this month's charge keeps its amount.
+  await page.getByRole("button", { name: "Ubah" }).first().click();
+  await page.getByRole("textbox", { name: "Jumlah per bulan" }).first().fill("350rb");
+  await page.getByRole("button", { name: "Simpan perubahan" }).click();
+  await expect(page.getByText("WiFi · Rp350.000")).toBeVisible();
+  await expect(page.getByRole("group").filter({ hasText: "WiFi" })).toContainText("Rp300.000");
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Hapus" }).first().click();
+  await expect(page.getByText("WiFi · Rp350.000")).toHaveCount(0);
+  await expect(page.getByText("Belum ada tagihan bulanan.")).toBeVisible();
+});

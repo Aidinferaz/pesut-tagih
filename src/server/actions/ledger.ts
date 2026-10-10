@@ -295,11 +295,8 @@ const BillInput = z.object({
   day: z.coerce.number().int().min(1).max(28),
 });
 
-export async function createRecurringBill(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const parsed = BillInput.safeParse({
+function readBill(formData: FormData) {
+  return BillInput.safeParse({
     groupId: formData.get("groupId"),
     title: formData.get("title"),
     amount: formData.get("amount"),
@@ -307,16 +304,46 @@ export async function createRecurringBill(
     participants: formData.getAll("participants"),
     day: formData.get("day"),
   });
-  if (!parsed.success) {
-    return {
-      status: "error",
-      error: "invalid",
-      field: String(parsed.error.issues[0]?.path[0] ?? ""),
-    };
-  }
+}
+
+const fieldOf = (error: z.ZodError) => String(error.issues[0]?.path[0] ?? "");
+
+/** A new monthly bill. If its day already passed this month, this month is billed at once. */
+export async function createRecurringBill(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = readBill(formData);
+  if (!parsed.success) return { status: "error", error: "invalid", field: fieldOf(parsed.error) };
   const supabase = await supabaseForUser();
-  const { error } = await supabase.rpc("create_recurring_bill", {
+  const { data, error } = await supabase.rpc("create_recurring_bill", {
     gid: parsed.data.groupId,
+    bill_title: parsed.data.title,
+    bill_amount: parsed.data.amount,
+    payer: parsed.data.paidBy,
+    people: parsed.data.participants,
+    day: parsed.data.day,
+    bill_this_month: formData.get("startNextMonth") !== "on",
+  });
+  if (error) return { status: "error", error: errorKeyFor(error.code) };
+  const expenseId = (data as { expense_id?: string | null } | null)?.expense_id;
+  if (expenseId) after(() => expenseLogged(expenseId));
+  revalidatePath(`/${langOf(formData)}`, "layout");
+  return { status: "ok", data: undefined };
+}
+
+/** Changes apply from the next month not yet billed; charges already in the book stay. */
+export async function updateRecurringBill(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const id = z.uuid().safeParse(formData.get("id"));
+  const parsed = readBill(formData);
+  if (!id.success) return { status: "error", error: "invalid" };
+  if (!parsed.success) return { status: "error", error: "invalid", field: fieldOf(parsed.error) };
+  const supabase = await supabaseForUser();
+  const { error } = await supabase.rpc("update_recurring_bill", {
+    bid: id.data,
     bill_title: parsed.data.title,
     bill_amount: parsed.data.amount,
     payer: parsed.data.paidBy,
@@ -324,8 +351,16 @@ export async function createRecurringBill(
     day: parsed.data.day,
   });
   if (error) return { status: "error", error: errorKeyFor(error.code) };
-  revalidatePath(`/${langOf(formData)}/groups/${parsed.data.groupId}`);
+  revalidatePath(`/${langOf(formData)}`, "layout");
   return { status: "ok", data: undefined };
+}
+
+export async function deleteRecurringBill(formData: FormData) {
+  const id = z.uuid().safeParse(formData.get("id"));
+  if (!id.success) return;
+  const supabase = await supabaseForUser();
+  await supabase.rpc("delete_recurring_bill", { bid: id.data });
+  revalidatePath(`/${langOf(formData)}`, "layout");
 }
 
 export async function setRecurringBillActive(formData: FormData) {

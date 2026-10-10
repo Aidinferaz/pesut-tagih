@@ -181,6 +181,9 @@ export const id = {
     empty: "Belum ada aktivitas.",
     someone: "Seseorang",
     actions: {
+      "bill.created": "{actor} membuat tagihan bulanan {title} sebesar {amount}",
+      "bill.updated": "{actor} mengubah tagihan bulanan {title}",
+      "bill.deleted": "{actor} menghapus tagihan bulanan {title}",
       "expense.created": "{actor} mencatat {title} sebesar {amount}",
       "expense.updated": "{actor} mengubah {title}",
       "expense.deleted": "{actor} menghapus {title} ({amount})",
@@ -430,6 +433,17 @@ export const id = {
     resume: "Lanjutkan",
     next: "berikutnya {date}",
     empty: "Belum ada tagihan bulanan.",
+    edit: "Ubah",
+    delete: "Hapus",
+    deleteConfirm:
+      "Hapus tagihan bulanan ini? Tagihan yang sudah tercatat tetap ada di buku besar.",
+    save: "Simpan perubahan",
+    cancel: "Batal",
+    startNextMonth: "Mulai bulan depan (bulan ini sudah dibayar di luar aplikasi)",
+    startHint:
+      "Kalau tanggalnya bulan ini sudah lewat, tagihan bulan ini langsung dicatat dan semua peserta berstatus belum bayar.",
+    editHint:
+      "Perubahan berlaku mulai tagihan berikutnya. Tagihan yang sudah tercatat diubah lewat tombol Ubah di buku besar.",
   },
 };
 

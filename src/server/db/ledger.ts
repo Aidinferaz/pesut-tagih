@@ -158,7 +158,9 @@ export async function listRecurringBills(groupId: string) {
   const supabase = await supabaseForUser();
   const { data, error } = await supabase
     .from("recurring_bills")
-    .select("id, title, amount, paid_by, participants, day_of_month, next_run_on, active")
+    .select(
+      "id, title, amount, paid_by, participants, day_of_month, next_run_on, active, created_by",
+    )
     .eq("group_id", groupId)
     .order("created_at");
   if (error) throw error;
@@ -171,6 +173,7 @@ export async function listRecurringBills(groupId: string) {
     dayOfMonth: b.day_of_month,
     nextRunOn: b.next_run_on,
     active: b.active,
+    createdBy: b.created_by,
   }));
 }
 

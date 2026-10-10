@@ -1,6 +1,6 @@
 -- Ledger functions: expenses, transfers and recurring bills.
 begin;
-select plan(27);
+select plan(34);
 
 create schema if not exists tests;
 create or replace function tests.act_as(uid uuid) returns void language plpgsql as $$
@@ -126,11 +126,52 @@ select tests.act_as('00000000-0000-0000-0000-0000000000a1');
 select lives_ok($$ select public.delete_expense((select eid from ctx)) $$, 'the payer can delete their expense');
 select ok(exists (select 1 from public.activity_log where action = 'expense.deleted'), 'the deletion is logged');
 
--- A monthly WiFi bill of 100,001 over three people.
+-- A bill whose day already passed this month is billed right away.
+create temp table bill (data jsonb) on commit drop;
+grant all on bill to authenticated;
+insert into bill select public.create_recurring_bill((select gid from ctx), 'Netflix', 186000, '00000000-0000-0000-0000-0000000000a1',
+  array['00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000b1']::uuid[], 1::smallint);
+select isnt((select data ->> 'expense_id' from bill), null, 'a bill created after its day bills this month at once');
+select is(
+  (select amount from public.expense_shares
+   where expense_id = (select (data ->> 'expense_id')::uuid from bill) and user_id = '00000000-0000-0000-0000-0000000000b1'),
+  93000::bigint,
+  'everyone on it starts out owing their share'
+);
+select ok(
+  (select next_run_on > current_date from public.recurring_bills where id = (select (data ->> 'bill_id')::uuid from bill)),
+  'the next charge is next month'
+);
+
+-- Editing changes future months only; the charge already billed stays.
+select tests.act_as('00000000-0000-0000-0000-0000000000c1');
+select throws_ok(
+  $$ select public.update_recurring_bill((select (data ->> 'bill_id')::uuid from bill), 'Hacked', 1,
+       '00000000-0000-0000-0000-0000000000c1', array['00000000-0000-0000-0000-0000000000a1']::uuid[], 1::smallint) $$,
+  '42501', null, 'members who did not set up a bill cannot change it'
+);
+select tests.act_as('00000000-0000-0000-0000-0000000000a1');
+select public.update_recurring_bill((select (data ->> 'bill_id')::uuid from bill), 'Netflix Premium', 200000,
+  '00000000-0000-0000-0000-0000000000a1',
+  array['00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000b1']::uuid[], 1::smallint);
+select is(
+  (select total from public.expenses where id = (select (data ->> 'expense_id')::uuid from bill)),
+  186000::bigint,
+  'an edit leaves this month''s charge alone'
+);
+select is(
+  (select amount from public.recurring_bills where id = (select (data ->> 'bill_id')::uuid from bill)),
+  200000::bigint,
+  'an edit sets the amount for next month'
+);
+select lives_ok($$ select public.delete_recurring_bill((select (data ->> 'bill_id')::uuid from bill)) $$,
+  'whoever set it up can delete a bill');
+
+-- A monthly WiFi bill of 100,001 over three people, starting next month.
 select public.create_recurring_bill((select gid from ctx), 'WiFi', 100001, '00000000-0000-0000-0000-0000000000a1',
-  array['00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000c1']::uuid[], 1::smallint);
+  array['00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000c1']::uuid[], 1::smallint, false);
 select tests.act_as_server();
-update public.recurring_bills set next_run_on = current_date - 1;
+update public.recurring_bills set next_run_on = current_date - 1 where title = 'WiFi';
 select is(public.run_recurring_bills(), 1, 'a due bill becomes an expense');
 select results_eq(
   $$ select s.amount from public.expense_shares s join public.expenses e on e.id = s.expense_id
@@ -138,7 +179,7 @@ select results_eq(
   $$ values (33334::bigint), (33334::bigint), (33333::bigint) $$,
   'leftover rupiah go to the earliest participants, like allocate()'
 );
-select ok((select next_run_on > current_date from public.recurring_bills), 'the bill moves to next month');
+select ok((select next_run_on > current_date from public.recurring_bills where title = 'WiFi'), 'the bill moves to next month');
 select lives_ok($$ set constraints all immediate $$, 'generated bills pass the commit-time balance check');
 set constraints all deferred;
 

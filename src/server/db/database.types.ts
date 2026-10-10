@@ -466,6 +466,15 @@ isOneToOne: false
 "auto_confirm_settlements":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"bill_dates":
+{ Args: { "day": number }; Returns: Record<string, unknown>
+                           },
+"bill_expense":
+{ Args: { "bid": string,"on_date": string }; Returns: string
+                           },
+"check_bill_people":
+{ Args: { "gid": string,"payer": string,"people": (string)[] }; Returns: undefined
+                           },
 "consume_ai_quota":
 { Args: { "daily_limit": number,"kind": string }; Returns: boolean
                            },
@@ -479,7 +488,7 @@ isOneToOne: false
 { Args: { "gid": string,"uses_allowed"?: number,"valid_days"?: number }; Returns: string
                            },
 "create_recurring_bill":
-{ Args: { "bill_amount": number,"bill_title": string,"day": number,"gid": string,"payer": string,"people": (string)[] }; Returns: string
+{ Args: { "bill_amount": number,"bill_this_month"?: boolean,"bill_title": string,"day": number,"gid": string,"payer": string,"people": (string)[] }; Returns: Json
                            },
 "create_telegram_group_link":
 { Args: { "gid": string }; Returns: string
@@ -492,6 +501,9 @@ isOneToOne: false
                            },
 "delete_expense":
 { Args: { "eid": string }; Returns: undefined
+                           },
+"delete_recurring_bill":
+{ Args: { "bid": string }; Returns: undefined
                            },
 "is_group_admin":
 { Args: { "gid": string }; Returns: boolean
@@ -533,6 +545,9 @@ isOneToOne: false
                            },
 "update_expense":
 { Args: { "discount_amount"?: number,"eid": string,"expense_note"?: string,"expense_title": string,"expense_total": number,"items"?: Json,"method": string,"on_date"?: string,"payer": string,"service_amount"?: number,"shares": Json,"tax_amount"?: number }; Returns: undefined
+                           },
+"update_recurring_bill":
+{ Args: { "bid": string,"bill_amount": number,"bill_title": string,"day": number,"payer": string,"people": (string)[] }; Returns: undefined
                            }
           }
           Enums: {

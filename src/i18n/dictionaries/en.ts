@@ -177,6 +177,9 @@ export const en: Dictionary = {
     empty: "No activity yet.",
     someone: "Someone",
     actions: {
+      "bill.created": "{actor} set up the monthly bill {title} for {amount}",
+      "bill.updated": "{actor} changed the monthly bill {title}",
+      "bill.deleted": "{actor} deleted the monthly bill {title}",
       "expense.created": "{actor} logged {title} for {amount}",
       "expense.updated": "{actor} changed {title}",
       "expense.deleted": "{actor} deleted {title} ({amount})",
@@ -425,5 +428,15 @@ export const en: Dictionary = {
     resume: "Resume",
     next: "next on {date}",
     empty: "No monthly bills yet.",
+    edit: "Edit",
+    delete: "Delete",
+    deleteConfirm: "Delete this monthly bill? Charges already logged stay in the ledger.",
+    save: "Save changes",
+    cancel: "Cancel",
+    startNextMonth: "Start next month (this month was paid outside the app)",
+    startHint:
+      "If the day has already passed this month, this month is logged right away and everyone on it starts out unpaid.",
+    editHint:
+      "Changes apply from the next charge. Charges already logged are edited with the Edit button in the ledger.",
   },
 };

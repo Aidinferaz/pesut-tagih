@@ -161,6 +161,7 @@ async function GroupContent({
               bills={bills}
               members={group.members.map((m) => ({ id: m.id, name: m.name }))}
               me={me}
+              isAdmin={isAdmin}
             />
           </div>
         </div>
