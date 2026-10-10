@@ -411,6 +411,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"telegram_group_links": {
+                  Row: {
+                    "expires_at": string,"group_id": string,"token_hash": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "expires_at": string,"group_id": string,"token_hash": string
+                  }
+                  Update: {
+                    "expires_at"?: string,"group_id"?: string,"token_hash"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "telegram_group_links_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"telegram_link_tokens": {
                   Row: {
                     "expires_at": string,"token_hash": string,"user_id": string
@@ -461,6 +481,9 @@ isOneToOne: false
 "create_recurring_bill":
 { Args: { "bill_amount": number,"bill_title": string,"day": number,"gid": string,"payer": string,"people": (string)[] }; Returns: string
                            },
+"create_telegram_group_link":
+{ Args: { "gid": string }; Returns: string
+                           },
 "create_telegram_link":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -504,6 +527,9 @@ isOneToOne: false
                            },
 "take_group_number":
 { Args: { "gid": string }; Returns: number
+                           },
+"unlink_telegram_group":
+{ Args: { "gid": string }; Returns: undefined
                            }
           }
           Enums: {

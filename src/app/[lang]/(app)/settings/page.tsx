@@ -16,7 +16,10 @@ import { getDictionary } from "@/i18n/get-dictionary";
 import { signOut } from "@/server/actions/auth";
 import { makePrimaryMethod, removePaymentMethod } from "@/server/actions/profile";
 import { requireUser } from "@/server/auth";
-import { getProfile, listPaymentMethods } from "@/server/db/profile";
+import { getChannels, getProfile, listPaymentMethods } from "@/server/db/profile";
+import { env } from "@/server/env";
+import { whatsappEnabled } from "@/server/notify/channels/fonnte";
+import { NotificationsPanel } from "@/components/settings/NotificationsPanel";
 
 export async function generateMetadata({
   params,
@@ -64,9 +67,10 @@ export default async function SettingsPage({ params }: PageProps<"/[lang]/settin
 
 async function SettingsContent({ lang, t }: { lang: Locale; t: Dictionary }) {
   const user = await requireUser(lang);
-  const [profile, methods] = await Promise.all([
+  const [profile, methods, channels] = await Promise.all([
     getProfile(user.id),
     listPaymentMethods([user.id]),
+    getChannels(user.id),
   ]);
   if (!profile) notFound();
 
@@ -136,6 +140,13 @@ async function SettingsContent({ lang, t }: { lang: Locale; t: Dictionary }) {
           <AddMethodForm defaultName={profile.name} />
         </div>
       </Panel>
+      <NotificationsPanel
+        telegramBot={Boolean(env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_BOT_USERNAME)}
+        telegramLinked={channels.telegramLinked}
+        vapidKey={env.VAPID_PRIVATE_KEY ? (env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null) : null}
+        whatsappGateway={whatsappEnabled()}
+        channels={channels}
+      />
     </>
   );
 }

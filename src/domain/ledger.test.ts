@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupPosition } from "./ledger";
+import { debtAgeDays, groupPosition } from "./ledger";
 import type { ExpenseEntry } from "./settle";
 
 const dinner: ExpenseEntry = {
@@ -34,5 +34,30 @@ describe("groupPosition", () => {
     });
     expect(balances.get("b")).toBe(-30);
     expect(transfers.map((t) => [t.from, t.to, t.amount])).toEqual([["b", "a", 30]]);
+  });
+});
+
+describe("debtAgeDays", () => {
+  const now = Date.parse("2026-10-20T12:00:00+08:00");
+  const expense = (occurredOn: string, paidBy = "a") => ({
+    paidBy,
+    occurredOn,
+    shares: [
+      { userId: "a", amount: 10 },
+      { userId: "b", amount: 10 },
+    ],
+  });
+
+  it("counts from the oldest shared expense", () => {
+    expect(debtAgeDays("b", [expense("2026-10-13"), expense("2026-10-18")], [], now)).toBe(7);
+  });
+
+  it("restarts after a confirmed payment", () => {
+    const paid = [{ from: "b", status: "confirmed" as const, createdAt: "2026-10-15T10:00:00Z" }];
+    expect(debtAgeDays("b", [expense("2026-10-13"), expense("2026-10-18")], paid, now)).toBe(2);
+  });
+
+  it("ignores expenses the person paid for themselves", () => {
+    expect(debtAgeDays("a", [expense("2026-10-13")], [], now)).toBe(0);
   });
 });

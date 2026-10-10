@@ -1,6 +1,7 @@
 import "server-only";
 import { generateText, Output, tool } from "ai";
 import { z } from "zod";
+import { debtAgeDays } from "@/domain/ledger";
 import { matchName } from "@/domain/names";
 import { MAX_AMOUNT } from "@/domain/money";
 import { providerName } from "@/domain/providers";
@@ -181,16 +182,7 @@ export function pesutTools({
           const person = matchName(book.group.members, debtor, (m) => m.name).found;
           const route = person && book.transfers.find((r) => r.from === person.id && r.to === me);
           if (!person || !route) continue;
-          const days = Math.max(
-            0,
-            ...book.expenses
-              .filter((e) => e.paidBy !== person.id && e.shares.some((s) => s.userId === person.id))
-              .map((e) =>
-                Math.floor(
-                  (Date.now() - Date.parse(`${e.occurredOn}T00:00:00+08:00`)) / 86_400_000,
-                ),
-              ),
-          );
+          const days = debtAgeDays(person.id, book.expenses, book.settlements, Date.now());
           const facts = {
             name: person.name,
             amount: rupiah(route.amount, locale),

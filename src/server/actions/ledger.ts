@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { MAX_AMOUNT, parseRupiah } from "@/domain/money";
@@ -8,6 +9,7 @@ import { PROVIDER_CODES } from "@/domain/providers";
 import { itemizedTotal, splitEqual, splitExact, splitItemized, SplitError } from "@/domain/split";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getCurrentUser } from "@/server/auth";
+import { expenseLogged, settlementChanged } from "@/server/notify/events";
 import { supabaseForUser } from "@/server/supabase/server";
 import { errorKeyFor, type FormState } from "./state";
 
@@ -101,7 +103,7 @@ export async function createExpense(_prev: FormState, formData: FormData): Promi
   if (total <= 0) return { status: "error", error: "invalid", field: "total" };
 
   const supabase = await supabaseForUser();
-  const { error } = await supabase.rpc("create_expense", {
+  const { data: expenseId, error } = await supabase.rpc("create_expense", {
     gid: input.groupId,
     expense_title: input.title,
     expense_total: total,
@@ -123,7 +125,8 @@ export async function createExpense(_prev: FormState, formData: FormData): Promi
     // The database refuses a receipt stored under another group's folder.
     receipt: input.receiptPath,
   });
-  if (error) return { status: "error", error: errorKeyFor(error.code) };
+  if (error || !expenseId) return { status: "error", error: errorKeyFor(error?.code) };
+  after(() => expenseLogged(expenseId));
 
   const lang = langOf(formData);
   revalidatePath(`/${lang}`, "layout");
@@ -182,7 +185,7 @@ export async function markPaid(_prev: FormState, formData: FormData): Promise<Fo
     if (upload.error) return { status: "error", error: "unknown" };
   }
 
-  const { error } = await supabase.rpc("mark_paid", {
+  const { data: settlementId, error } = await supabase.rpc("mark_paid", {
     gid: groupId,
     receiver: to,
     paid_amount: amount,
@@ -190,7 +193,8 @@ export async function markPaid(_prev: FormState, formData: FormData): Promise<Fo
     proof,
     settlement_note: note,
   });
-  if (error) return { status: "error", error: errorKeyFor(error.code) };
+  if (error || !settlementId) return { status: "error", error: errorKeyFor(error?.code) };
+  after(() => settlementChanged(settlementId));
   revalidatePath(`/${langOf(formData)}`, "layout");
   return { status: "ok", data: undefined };
 }
@@ -201,7 +205,8 @@ export async function decideSettlement(formData: FormData) {
   const accept = formData.get("decision") === "accept";
   const reason = String(formData.get("reason") ?? "").slice(0, 280) || undefined;
   const supabase = await supabaseForUser();
-  await supabase.rpc("decide_settlement", { sid: id.data, accept, reason });
+  const { error } = await supabase.rpc("decide_settlement", { sid: id.data, accept, reason });
+  if (!error) after(() => settlementChanged(id.data));
   revalidatePath(`/${langOf(formData)}`, "layout");
 }
 
@@ -220,12 +225,13 @@ export async function recordReceived(_prev: FormState, formData: FormData): Prom
   });
   if (!parsed.success) return { status: "error", error: "invalid" };
   const supabase = await supabaseForUser();
-  const { error } = await supabase.rpc("record_received", {
+  const { data: settlementId, error } = await supabase.rpc("record_received", {
     gid: parsed.data.groupId,
     payer: parsed.data.from,
     paid_amount: parsed.data.amount,
   });
-  if (error) return { status: "error", error: errorKeyFor(error.code) };
+  if (error || !settlementId) return { status: "error", error: errorKeyFor(error?.code) };
+  after(() => settlementChanged(settlementId));
   revalidatePath(`/${langOf(formData)}`, "layout");
   return { status: "ok", data: undefined };
 }

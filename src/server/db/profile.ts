@@ -53,3 +53,20 @@ export async function listPaymentMethods(userIds: string[]): Promise<PaymentMeth
     priority: m.priority,
   }));
 }
+
+export async function getChannels(userId: string) {
+  const supabase = await supabaseForUser();
+  const { data, error } = await supabase
+    .from("contact_channels")
+    .select("telegram_chat_id, wa_number, notify_telegram, notify_push, notify_whatsapp")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return {
+    telegramLinked: Boolean(data?.telegram_chat_id),
+    waNumber: data?.wa_number ? `0${data.wa_number.slice(2)}` : "",
+    telegram: data?.notify_telegram ?? true,
+    push: data?.notify_push ?? true,
+    whatsapp: data?.notify_whatsapp ?? false,
+  };
+}

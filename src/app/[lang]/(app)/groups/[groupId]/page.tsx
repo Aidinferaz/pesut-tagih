@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { lang as rootLang } from "next/root-params";
 import { Suspense } from "react";
 import { z } from "zod";
+import { GroupSettingsPanel } from "@/components/groups/GroupSettingsPanel";
 import { InvitePanel } from "@/components/groups/InvitePanel";
 import { LeaveGroupButton } from "@/components/groups/LeaveGroupButton";
 import { PesutRiver } from "@/components/home/PesutRiver";
@@ -23,13 +24,8 @@ import { getDictionary } from "@/i18n/get-dictionary";
 import { rupiah } from "@/lib/format";
 import { requireUser } from "@/server/auth";
 import { requestNow } from "@/server/clock";
-import {
-  getGroupBook,
-  listRecurringBills,
-  signedUrls,
-  viewForMember,
-  type GroupBook,
-} from "@/server/db/ledger";
+import { debtAgeDays } from "@/domain/ledger";
+import { getGroupBook, listRecurringBills, signedUrls, viewForMember } from "@/server/db/ledger";
 import { env } from "@/server/env";
 
 type Params = PageProps<"/[lang]/groups/[groupId]">;
@@ -53,27 +49,6 @@ export default async function GroupPage({ params, searchParams }: Params) {
       </Suspense>
     </main>
   );
-}
-
-const DAY = 24 * 60 * 60 * 1000;
-
-/** How long you've owed money: since the oldest expense you share that came after your last payment. */
-function daysOwing(book: GroupBook, me: string, now: number) {
-  const lastPaid =
-    book.settlements
-      .find((s) => s.from === me && s.status === "confirmed")
-      ?.createdAt.slice(0, 10) ?? "";
-  const dates = book.expenses
-    .filter(
-      (e) =>
-        e.paidBy !== me &&
-        e.shares.some((s) => s.userId === me && s.amount > 0) &&
-        e.occurredOn >= lastPaid,
-    )
-    .map((e) => e.occurredOn);
-  if (dates.length === 0) return 0;
-  const oldest = dates.reduce((a, b) => (a < b ? a : b));
-  return Math.max(0, Math.floor((now - Date.parse(`${oldest}T00:00:00+08:00`)) / DAY));
 }
 
 async function GroupContent({
@@ -115,7 +90,7 @@ async function GroupContent({
     expenses.flatMap((e) => (e.receiptPath ? [e.receiptPath] : [])),
   );
 
-  const days = daysOwing(book, me, await requestNow());
+  const days = debtAgeDays(me, expenses, settlements, await requestNow());
   const biggest = outgoing.toSorted((a, b) => b.amount - a.amount)[0];
   const opening = biggest
     ? format(t.pesut.idleOwe, {
@@ -253,6 +228,16 @@ async function GroupContent({
               </ul>
             </Panel>
             {isAdmin && <InvitePanel groupId={group.id} groupName={group.name} />}
+            {isAdmin && (
+              <GroupSettingsPanel
+                groupId={group.id}
+                simplify={group.simplifyDebts}
+                autoConfirmDays={group.autoConfirmDays}
+                recapAmounts={group.recapAmounts}
+                telegramLinked={group.telegramLinked}
+                bot={env.TELEGRAM_BOT_TOKEN ? (env.TELEGRAM_BOT_USERNAME ?? null) : null}
+              />
+            )}
             <LeaveGroupButton groupId={group.id} />
           </div>
         </div>

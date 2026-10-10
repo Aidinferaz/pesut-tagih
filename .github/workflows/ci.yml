@@ -81,6 +81,10 @@ jobs:
             echo "SUPABASE_SECRET_KEY=$SECRET_KEY"
             echo "DEV_EMAIL_LOGIN=true"
             echo "AI_PROVIDER=mock"
+            echo "CRON_SECRET=local-cron-secret"
+            echo "TELEGRAM_BOT_TOKEN=000000:local-test-token"
+            echo "TELEGRAM_BOT_USERNAME=PesutTagihBot"
+            echo "TELEGRAM_WEBHOOK_SECRET=local-webhook-secret"
           } > .env.local
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

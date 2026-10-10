@@ -31,6 +31,9 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
   return {
     title: { default: t.meta.title, template: `%s · ${t.meta.title}` },
     description: t.meta.description,
+    manifest: "/manifest.webmanifest",
+    icons: { icon: "/icons/192.png", apple: "/icons/192.png" },
+    appleWebApp: { capable: true, title: t.meta.title, statusBarStyle: "black-translucent" },
   };
 }
 

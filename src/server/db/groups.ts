@@ -42,6 +42,8 @@ export type GroupDetail = {
   hull: Hull;
   simplifyDebts: boolean;
   autoConfirmDays: number;
+  recapAmounts: boolean;
+  telegramLinked: boolean;
   members: Member[];
 };
 
@@ -51,7 +53,7 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
   const { data, error } = await supabase
     .from("groups")
     .select(
-      "id, name, hull, simplify_debts, auto_confirm_days, group_members (role, joined_at, profiles (id, display_name, avatar_url))",
+      "id, name, hull, simplify_debts, auto_confirm_days, telegram_recap_amounts, telegram_chat_id, group_members (role, joined_at, profiles (id, display_name, avatar_url))",
     )
     .eq("id", groupId)
     .maybeSingle();
@@ -63,6 +65,8 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
     hull: data.hull as Hull,
     simplifyDebts: data.simplify_debts,
     autoConfirmDays: data.auto_confirm_days,
+    recapAmounts: data.telegram_recap_amounts,
+    telegramLinked: data.telegram_chat_id !== null,
     members: data.group_members
       .toSorted((a, b) => a.joined_at.localeCompare(b.joined_at))
       .map((m) => ({
