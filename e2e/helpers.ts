@@ -26,7 +26,7 @@ async function magicLinkFor(address: string, since: number): Promise<string> {
 }
 
 export function uniqueEmail(name: string) {
-  return `${name}.${Date.now()}.${Math.floor(Math.random() * 1e6)}@example.com`;
+  return `${name}.${Date.now()}.${Math.floor(Math.random() * 1e6)}@example.com`.toLowerCase();
 }
 
 /** Signs in through the development email form and lands on the app. */

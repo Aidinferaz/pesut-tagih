@@ -56,15 +56,10 @@ export function BalanceHull({
 function Hull() {
   const top = WATER_Y - 30;
   return (
-    <g
-      transform={`translate(96 ${top})`}
-      stroke="var(--line-strong)"
-      strokeWidth="3"
-      strokeLinejoin="round"
-    >
-      {/* Roof and cabin of a river taxi */}
-      <rect x="92" y="-50" width="250" height="10" fill="var(--plate)" />
-      <rect x="108" y="-40" width="218" height="40" fill="var(--surface)" />
+    <g transform={`translate(96 ${top})`} stroke="#082f33" strokeWidth="3" strokeLinejoin="round">
+      {/* Roof and cabin of a river taxi. The boat keeps its own paint in both themes. */}
+      <rect x="92" y="-50" width="250" height="10" fill="#0b5d5e" />
+      <rect x="108" y="-40" width="218" height="40" fill="#f3f5f0" />
       {[0, 1, 2, 3, 4].map((i) => (
         <rect
           key={i}
@@ -72,18 +67,18 @@ function Hull() {
           y="-30"
           width="24"
           height="18"
-          fill="var(--rail)"
+          fill="#0b5d5e"
           strokeWidth="2"
         />
       ))}
       <clipPath id="hull-shape">
         <path d="M0 0 H412 L448 -18 L406 64 H30 L0 30 Z" />
       </clipPath>
-      <path d="M0 0 H412 L448 -18 L406 64 H30 L0 30 Z" fill="var(--surface)" />
+      <path d="M0 0 H412 L448 -18 L406 64 H30 L0 30 Z" fill="#f3f5f0" />
       <g clipPath="url(#hull-shape)" stroke="none">
         <rect x="-10" y="14" width="470" height="10" fill="var(--band)" />
         <rect x="-10" y="28" width="470" height="6" fill="var(--debt)" />
-        <rect x="-10" y="34" width="470" height="40" fill="var(--rail)" />
+        <rect x="-10" y="34" width="470" height="40" fill="#0b5d5e" />
       </g>
       <path d="M0 0 H412 L448 -18 L406 64 H30 L0 30 Z" fill="none" />
     </g>

@@ -159,6 +159,7 @@ export const en: Dictionary = {
     idleOwe: "Your {amount} for {name} has been swimming alone for {days} days. Poor thing.",
     idleEven: "Everything's settled. I'm now an unemployed caped dolphin.",
     homeOwe: "You still owe {name} {amount}. I know. I always know.",
+    idleOweToday: "Your {amount} for {name} was just logged. Pesut is watching from the river.",
     idleOwed: "{count} people still owe you {amount}. Say the word and I'll hose them down.",
     sceneLabel: "Pesut, the caped voxel mascot. Click to poke.",
     paidLine: "Whoa, fast for once. {name} just has to confirm, don't run off yet.",
@@ -259,6 +260,16 @@ export const en: Dictionary = {
       "Add @{bot} to your Telegram group, then send this message in the group (valid for 30 minutes):",
     telegramUnlink: "Disconnect the Telegram group",
     recapAmounts: "Show amounts in the Telegram group recap",
+  },
+  pages: {
+    notFoundTitle: "Lost in the river",
+    notFoundBody:
+      "This page doesn't exist, or you don't have access to it. Pesut dived in looking for it and came back empty.",
+    errorTitle: "Something sprang a leak",
+    errorBody:
+      "Something broke on our side. Your data is safe. Try again, and if it keeps happening, tell your circle's admin.",
+    retry: "Try again",
+    home: "Go home",
   },
   errors: {
     invalid: "Something in the form isn't right yet. Take another look.",

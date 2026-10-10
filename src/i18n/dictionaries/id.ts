@@ -163,6 +163,7 @@ export const id = {
     idleOwe: "{amount}-mu ke {name} sudah {days} hari berenang sendirian. Kasihan dia.",
     idleEven: "Semua lunas. Aku jadi pengangguran berjubah.",
     homeOwe: "Kamu masih punya {amount} ke {name}. Aku tahu. Aku selalu tahu.",
+    idleOweToday: "{amount}-mu ke {name} baru saja tercatat. Pesut mengawasi dari sungai.",
     idleOwed: "{count} orang masih berutang {amount} ke kamu. Tinggal bilang, nanti kusemprot.",
     sceneLabel: "Pesut, maskot voxel berjubah. Klik untuk mencolek.",
     paidLine: "Wih, tumben cepat. {name} tinggal konfirmasi, jangan kabur dulu.",
@@ -263,6 +264,16 @@ export const id = {
       "Tambahkan @{bot} ke grup Telegram kalian, lalu kirim pesan ini di grup (berlaku 30 menit):",
     telegramUnlink: "Putuskan grup Telegram",
     recapAmounts: "Tampilkan nominal di rekap grup Telegram",
+  },
+  pages: {
+    notFoundTitle: "Hilang di sungai",
+    notFoundBody:
+      "Halaman ini tidak ada, atau kamu tidak punya akses. Pesut sudah menyelam mencarinya, nihil.",
+    errorTitle: "Ada yang bocor",
+    errorBody:
+      "Sesuatu rusak di pihak kami. Datamu aman. Coba lagi, dan kalau tetap begini, kabari admin circle.",
+    retry: "Coba lagi",
+    home: "Ke beranda",
   },
   errors: {
     invalid: "Isiannya belum benar. Cek lagi ya.",

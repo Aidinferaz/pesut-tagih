@@ -1,0 +1,41 @@
+name: Migrate production database
+
+# Applies new migrations in supabase/migrations to the production project.
+# Runs after CI passes on main, behind the "production" environment so a
+# reviewer can be required (Settings → Environments → production).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  push:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      - name: Skip until the production project is configured
+        id: configured
+        run: echo "ready=${{ secrets.SUPABASE_PROJECT_REF != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.configured.outputs.ready == 'true'
+        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+      - if: steps.configured.outputs.ready == 'true'
+        run: supabase db push

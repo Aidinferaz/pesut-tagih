@@ -93,7 +93,7 @@ async function GroupContent({
   const days = debtAgeDays(me, expenses, settlements, await requestNow());
   const biggest = outgoing.toSorted((a, b) => b.amount - a.amount)[0];
   const opening = biggest
-    ? format(t.pesut.idleOwe, {
+    ? format(days > 0 ? t.pesut.idleOwe : t.pesut.idleOweToday, {
         amount: rupiah(biggest.amount, lang),
         name: names[biggest.to],
         days,
@@ -158,6 +158,14 @@ async function GroupContent({
               locale={lang}
             />
           </div>
+          <div className="order-6 lg:order-none">
+            <RecurringPanel
+              groupId={group.id}
+              bills={bills}
+              members={group.members.map((m) => ({ id: m.id, name: m.name }))}
+              me={me}
+            />
+          </div>
         </div>
 
         <div className="contents lg:flex lg:flex-col lg:gap-7">
@@ -189,14 +197,6 @@ async function GroupContent({
               mood={mood}
               opening={query.logged ? t.pesut.loggedLine : opening}
               greet={query.logged ? "jump" : undefined}
-            />
-          </div>
-          <div className="order-6 lg:order-none">
-            <RecurringPanel
-              groupId={group.id}
-              bills={bills}
-              members={group.members.map((m) => ({ id: m.id, name: m.name }))}
-              me={me}
             />
           </div>
           <div className="order-7 grid min-w-0 grid-cols-1 gap-5 lg:order-none lg:gap-7">

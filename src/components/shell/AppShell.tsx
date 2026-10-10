@@ -34,43 +34,45 @@ export function AppShell({
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[16rem_1fr]">
       {/* Desktop rail */}
-      <aside className="bg-rail text-rail-ink sticky top-0 hidden h-dvh flex-col gap-8 overflow-y-auto px-5 py-7 lg:flex">
-        <Link href={href("/home")} className="block rounded-md">
-          <Wordmark />
-          <span className="hull-stripe mt-4 block" aria-hidden />
-        </Link>
-
-        <nav aria-label={t.nav.menu} className="flex flex-col gap-1">
-          {NAV.map(({ key, path, icon: Icon }) => (
-            <NavLink
-              key={key}
-              href={href(path)}
-              className="text-rail-ink-soft hover:text-rail-ink flex items-center gap-3 rounded-md px-3 py-2.5 text-[0.9375rem] font-semibold transition-colors"
-              activeClassName="!bg-rail-deep !text-rail-ink"
-            >
-              <Icon className="size-[18px]" strokeWidth={2.25} aria-hidden />
-              {t.nav[key]}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div>
-          <h2 className="text-rail-ink-soft mb-2 text-xs font-bold tracking-[0.12em] uppercase">
-            {t.nav.groups}
-          </h2>
-          {groupsSlot}
-          <Link
-            href={href("/groups/new")}
-            className="text-rail-ink-soft hover:text-rail-ink mt-1 flex items-center gap-3 rounded-md px-1 py-1.5 text-sm font-semibold"
-          >
-            <Plus className="size-4" strokeWidth={2.5} aria-hidden />
-            {t.nav.newGroup}
+      <aside className="bg-rail text-rail-ink hidden lg:block">
+        <div className="sticky top-0 flex h-dvh flex-col gap-8 overflow-y-auto px-5 py-7">
+          <Link href={href("/home")} className="block rounded-md">
+            <Wordmark />
+            <span className="hull-stripe mt-4 block" aria-hidden />
           </Link>
-        </div>
 
-        <div className="mt-auto flex items-center justify-between">
-          <ThemeSwitch />
-          <LanguageSwitch />
+          <nav aria-label={t.nav.menu} className="flex flex-col gap-1">
+            {NAV.map(({ key, path, icon: Icon }) => (
+              <NavLink
+                key={key}
+                href={href(path)}
+                className="text-rail-ink-soft hover:text-rail-ink flex items-center gap-3 rounded-md px-3 py-2.5 text-[0.9375rem] font-semibold transition-colors"
+                activeClassName="!bg-rail-deep !text-rail-ink"
+              >
+                <Icon className="size-[18px]" strokeWidth={2.25} aria-hidden />
+                {t.nav[key]}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div>
+            <h2 className="text-rail-ink-soft mb-2 text-xs font-bold tracking-[0.12em] uppercase">
+              {t.nav.groups}
+            </h2>
+            {groupsSlot}
+            <Link
+              href={href("/groups/new")}
+              className="text-rail-ink-soft hover:text-rail-ink mt-1 flex items-center gap-3 rounded-md px-1 py-1.5 text-sm font-semibold"
+            >
+              <Plus className="size-4" strokeWidth={2.5} aria-hidden />
+              {t.nav.newGroup}
+            </Link>
+          </div>
+
+          <div className="mt-auto flex items-center justify-between">
+            <ThemeSwitch />
+            <LanguageSwitch />
+          </div>
         </div>
       </aside>
 

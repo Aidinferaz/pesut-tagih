@@ -27,7 +27,14 @@ const Body = z.object({
     .max(40),
 });
 
+/** Same-site only: another site can't make a signed-in browser spend this person's AI quota. */
+function sameOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  return origin !== null && origin === new URL(env.NEXT_PUBLIC_SITE_URL).origin;
+}
+
 export async function POST(request: Request) {
+  if (!sameOrigin(request)) return Response.json({ error: "forbidden" }, { status: 403 });
   const user = await getCurrentUser();
   if (!user) return Response.json({ error: "notSignedIn" }, { status: 401 });
   if (!aiEnabled()) return Response.json({ error: "aiDisabled" }, { status: 503 });
@@ -46,7 +53,11 @@ export async function POST(request: Request) {
 
   const result = streamText({
     model: languageModel("agent", "chat"),
-    system: agentSystemPrompt({ locale, name: profile?.name ?? "teman", today }),
+    system: agentSystemPrompt({
+      locale,
+      name: profile?.name ?? (locale === "en" ? "friend" : "teman"),
+      today,
+    }),
     messages: await convertToModelMessages(messages),
     tools: pesutTools({ me: user.id, locale, siteUrl: env.NEXT_PUBLIC_SITE_URL }),
     stopWhen: stepCountIs(5),
@@ -56,7 +67,10 @@ export async function POST(request: Request) {
   return createUIMessageStreamResponse({
     stream: toUIMessageStream({
       stream: result.stream,
-      onError: () => "Pesut tersedak. Coba lagi sebentar.",
+      onError: () =>
+        locale === "en"
+          ? "Pesut choked. Try again in a moment."
+          : "Pesut tersedak. Coba lagi sebentar.",
     }),
   });
 }
