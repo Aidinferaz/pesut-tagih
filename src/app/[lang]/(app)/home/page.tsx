@@ -109,7 +109,7 @@ async function HomeContent({ lang, t }: { lang: Locale; t: Dictionary }) {
       {waiting > 0 && (
         <Link
           href={`/${lang}/transfers`}
-          className="border-line-strong bg-band flex items-center justify-between gap-3 rounded-[10px] border-2 px-5 py-4 font-bold text-[#082f33]"
+          className="border-line-strong bg-plate text-plate-ink flex items-center justify-between gap-3 rounded-[10px] border-2 px-5 py-4 font-bold"
         >
           {format(t.home.waiting, { count: waiting })}
           <ChevronRight className="size-5" aria-hidden />

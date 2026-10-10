@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePesut, type PesutAction, type PesutMood } from "@/components/pesut/mood";
 import { PesutStage } from "@/components/pesut/PesutStage";
+import { buttonClass } from "@/components/ui/Button";
 import { useI18n } from "@/i18n/provider";
 
 /**
@@ -58,7 +59,7 @@ export function PesutRiver({
         <button
           type="button"
           onClick={chaseAll}
-          className="border-line-strong bg-band pointer-events-auto min-h-11 rounded-md border-2 px-4 text-[0.9375rem] font-bold text-[#082f33]"
+          className={buttonClass("primary", "pointer-events-auto")}
         >
           {t.pesut.chaseAll}
         </button>

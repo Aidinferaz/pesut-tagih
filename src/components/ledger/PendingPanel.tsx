@@ -37,7 +37,7 @@ export function PendingPanel({
   if (relevant.length === 0) return null;
 
   return (
-    <Panel aria-labelledby={`pending-${groupId}`} className="border-band">
+    <Panel aria-labelledby={`pending-${groupId}`}>
       <PanelTitle id={`pending-${groupId}`}>{title ?? t.pending.title}</PanelTitle>
       <ul className="mt-3">
         {relevant.map((s) => {

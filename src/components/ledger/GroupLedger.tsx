@@ -68,12 +68,12 @@ function CloseBar({
     <div className="mt-4 grid gap-3">
       {row(
         owed,
-        ["bg-credit", "bg-band", "bg-plate"],
+        ["bg-credit", "bg-credit/65", "bg-credit/35"],
         format(t.ledger.owedSide, { amount: rupiah(total, locale) }),
       )}
       {row(
         owing,
-        ["bg-debt", "bg-action", "bg-ink-soft"],
+        ["bg-debt", "bg-debt/65", "bg-debt/35"],
         format(t.ledger.oweSide, { amount: rupiah(total, locale) }),
       )}
     </div>
@@ -150,7 +150,7 @@ export function GroupLedger({
             row.kind === "settlement" ? (
               <li
                 key={row.settlement.id}
-                className="border-line grid grid-cols-[4.75rem_minmax(0,1fr)_auto] items-baseline gap-3 border-b py-3 text-[0.9375rem]"
+                className="border-line grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b py-3 text-[0.9375rem]"
               >
                 <span>
                   <Plate size="sm">{plateNumber("PT", row.settlement.number)}</Plate>
@@ -216,19 +216,27 @@ function ExpenseRow({
   return (
     <li className="border-line border-b">
       <details className="group">
-        <summary className="grid cursor-pointer list-none grid-cols-[4.75rem_minmax(0,1fr)_auto_auto] items-start gap-3 py-3 text-[0.9375rem] [&::-webkit-details-marker]:hidden">
+        <summary className="grid cursor-pointer list-none grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 py-3 text-[0.9375rem] sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] [&::-webkit-details-marker]:hidden">
           <span>
             <Plate size="sm">{plateNumber("PT", e.number)}</Plate>
           </span>
           <span className="min-w-0">
             <span className="block font-semibold">{e.title}</span>
-            <span className="text-ink-soft block text-sm">
-              {names[e.paidBy]} ·{" "}
-              <span className="whitespace-nowrap">{shortDate(e.occurredOn, locale)}</span>
-              {e.recurring && ` · ${t.ledger.recurring}`}
+            <span className="text-ink-soft flex justify-between gap-3 text-sm">
+              <span>
+                {names[e.paidBy]} ·{" "}
+                <span className="whitespace-nowrap">{shortDate(e.occurredOn, locale)}</span>
+                {e.recurring && ` · ${t.ledger.recurring}`}
+              </span>
+              {/* On phones the amount drops here so the title gets the whole row. */}
+              <span className="text-ink font-semibold tabular-nums sm:hidden">
+                {rupiah(e.total, locale)}
+              </span>
             </span>
           </span>
-          <span className="font-semibold tabular-nums">{rupiah(e.total, locale)}</span>
+          <span className="hidden font-semibold tabular-nums sm:block">
+            {rupiah(e.total, locale)}
+          </span>
           <ChevronDown
             className="text-muted size-4 self-center transition-transform group-open:rotate-180"
             aria-hidden

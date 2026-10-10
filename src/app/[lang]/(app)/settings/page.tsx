@@ -9,6 +9,7 @@ import { LanguageSwitch } from "@/components/shell/LanguageSwitch";
 import { ThemeSwitch } from "@/components/shell/ThemeSwitch";
 import { buttonClass } from "@/components/ui/Button";
 import { Panel, PanelTitle } from "@/components/ui/Panel";
+import { Plate } from "@/components/ui/Plate";
 import { providerName } from "@/domain/providers";
 import { isLocale, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries/id";
@@ -101,8 +102,8 @@ async function SettingsContent({ lang, t }: { lang: Locale; t: Dictionary }) {
                   <p className="font-bold">
                     {providerName(m.provider)}
                     {i === 0 && (
-                      <span className="bg-band ml-2 rounded px-1.5 py-0.5 text-xs text-[#082f33]">
-                        {t.settings.primary}
+                      <span className="ml-2">
+                        <Plate size="sm">{t.settings.primary}</Plate>
                       </span>
                     )}
                   </p>

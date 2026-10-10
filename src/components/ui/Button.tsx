@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentPropsWithoutRef } from "react";
 
-type Variant = "primary" | "outline" | "ghost";
+type Variant = "primary" | "outline" | "ghost" | "danger";
 
 const base =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border-2 px-4 text-[0.9375rem] font-bold whitespace-nowrap transition-[background-color,border-color,color,transform] duration-200 ease-out-quint active:translate-y-px disabled:cursor-not-allowed disabled:border-line disabled:bg-surface-sunk disabled:text-muted disabled:active:translate-y-0";
@@ -10,6 +10,8 @@ const variants: Record<Variant, string> = {
   primary: "border-action bg-action text-action-ink enabled:hover:brightness-105",
   outline: "border-line-strong bg-transparent text-ink hover:bg-surface-sunk",
   ghost: "border-transparent bg-transparent text-ink hover:bg-surface-sunk",
+  /** Actions that are hard to take back, like leaving a group. */
+  danger: "border-debt bg-transparent text-debt hover:bg-debt hover:text-surface",
 };
 
 export function buttonClass(variant: Variant = "primary", extra = "") {
