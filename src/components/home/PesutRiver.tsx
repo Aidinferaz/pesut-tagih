@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePesut, type PesutMood } from "@/components/pesut/mood";
+import { usePesut, type PesutAction, type PesutMood } from "@/components/pesut/mood";
 import { PesutStage } from "@/components/pesut/PesutStage";
 import { useI18n } from "@/i18n/provider";
 
@@ -9,18 +9,27 @@ import { useI18n } from "@/i18n/provider";
  * Pesut's corner of the river. The speech bubble is a live region so whatever
  * Pesut says is announced.
  */
-export function PesutRiver({ mood, opening }: { mood: PesutMood; opening: string }) {
+export function PesutRiver({
+  mood,
+  opening,
+  greet,
+}: {
+  mood: PesutMood;
+  opening: string;
+  greet?: PesutAction;
+}) {
   const { t } = useI18n();
   const text = usePesut((s) => s.line) ?? opening;
   const pokes = useRef(0);
 
-  // Pesut's mood follows this page's data; whatever was said here is
-  // forgotten on the way out so the next page starts with its own line.
+  // Pesut's mood follows this page's data.
+  useEffect(() => usePesut.getState().setMood(mood), [mood]);
+  // Whatever was said here is forgotten on the way out, so the next page starts with its own line.
+  useEffect(() => () => usePesut.getState().say(null), []);
+  // Arriving with something to celebrate (a just-logged expense, say).
   useEffect(() => {
-    const pesut = usePesut.getState();
-    pesut.setMood(mood);
-    return () => pesut.say(null);
-  }, [mood]);
+    if (greet) usePesut.getState().act(greet);
+  }, [greet]);
 
   const onPoke = () => {
     usePesut.getState().say(t.pesut.poke[pokes.current % t.pesut.poke.length]);

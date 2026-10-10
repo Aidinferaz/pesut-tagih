@@ -87,6 +87,15 @@
   html {
     -webkit-text-size-adjust: 100%;
     scrollbar-color: var(--line-strong) transparent;
+    /* Keep focused or scrolled-to elements clear of the sticky bars on phones. */
+    scroll-padding-top: 4.5rem;
+    scroll-padding-bottom: 6.5rem;
+  }
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-top: 1rem;
+      scroll-padding-bottom: 1rem;
+    }
   }
   body {
     background: var(--ground);

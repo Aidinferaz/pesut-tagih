@@ -9,10 +9,13 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: false,
+  // One browser at a time: the dev server compiles routes on demand and slows under parallel load.
+  workers: 1,
+  timeout: 60_000,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   // The dev server compiles each route on first visit, which is slow on CI runners.
-  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
+  expect: { timeout: process.env.CI ? 15_000 : 10_000 },
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",

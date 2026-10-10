@@ -440,8 +440,17 @@ isOneToOne: false
             "accept_invite":
 { Args: { "token": string }; Returns: string
                            },
+"assert_member":
+{ Args: { "gid": string,"uid": string }; Returns: undefined
+                           },
+"auto_confirm_settlements":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "consume_ai_quota":
 { Args: { "daily_limit": number,"kind": string }; Returns: boolean
+                           },
+"create_expense":
+{ Args: { "discount_amount"?: number,"expense_note"?: string,"expense_title": string,"expense_total": number,"gid": string,"items"?: Json,"method": string,"on_date"?: string,"payer": string,"receipt"?: string,"service_amount"?: number,"shares": Json,"tax_amount"?: number }; Returns: string
                            },
 "create_group":
 { Args: { "group_hull"?: string,"group_name": string }; Returns: string
@@ -449,14 +458,29 @@ isOneToOne: false
 "create_invite":
 { Args: { "gid": string,"uses_allowed"?: number,"valid_days"?: number }; Returns: string
                            },
+"create_recurring_bill":
+{ Args: { "bill_amount": number,"bill_title": string,"day": number,"gid": string,"payer": string,"people": (string)[] }; Returns: string
+                           },
 "create_telegram_link":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"decide_settlement":
+{ Args: { "accept": boolean,"reason"?: string,"sid": string }; Returns: undefined
+                           },
+"delete_expense":
+{ Args: { "eid": string }; Returns: undefined
                            },
 "is_group_admin":
 { Args: { "gid": string }; Returns: boolean
                            },
 "is_group_member":
 { Args: { "gid": string }; Returns: boolean
+                           },
+"mark_paid":
+{ Args: { "gid": string,"paid_amount": number,"proof"?: string,"receiver": string,"settlement_note"?: string,"via"?: string }; Returns: string
+                           },
+"next_monthly":
+{ Args: { "after": string,"day_of_month": number }; Returns: string
                            },
 "path_owner":
 { Args: { "object_name": string }; Returns: string
@@ -465,6 +489,15 @@ isOneToOne: false
 { Args: { "token": string }; Returns: {
               "group_name": string,"member_count": number
             }[]
+                           },
+"record_received":
+{ Args: { "gid": string,"paid_amount": number,"payer": string,"settlement_note"?: string }; Returns: string
+                           },
+"run_recurring_bills":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"set_recurring_bill_active":
+{ Args: { "bid": string,"is_active": boolean }; Returns: undefined
                            },
 "shares_group_with":
 { Args: { "other": string }; Returns: boolean

@@ -38,3 +38,11 @@ export async function signIn(page: Page, email: string, lang = "id", next?: stri
   await expect(page.getByText(/Mailpit/)).toBeVisible();
   await page.goto(await magicLinkFor(email, since));
 }
+
+/** The page must never scroll sideways, whatever the content (long names, big numbers). */
+export async function expectNoSidewaysScroll(page: Page) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+}

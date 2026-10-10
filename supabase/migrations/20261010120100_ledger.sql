@@ -111,12 +111,15 @@ language plpgsql
 set search_path = ''
 as $$
 declare
-  eid uuid := coalesce(new.expense_id, old.expense_id);
+  eid uuid;
   expected bigint;
   actual bigint;
 begin
+  -- Fired from both tables; only touch the fields the firing table has.
   if tg_table_name = 'expenses' then
     eid := coalesce(new.id, old.id);
+  else
+    eid := coalesce(new.expense_id, old.expense_id);
   end if;
   select total into expected from public.expenses where id = eid and deleted_at is null;
   if not found then
