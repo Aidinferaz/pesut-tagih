@@ -32,11 +32,12 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.120.0
-      - name: Skip until the production database is configured
-        id: configured
-        run: echo "ready=${{ secrets.SUPABASE_DB_URL != '' }}" >> "$GITHUB_OUTPUT"
       - name: Apply migrations
-        if: steps.configured.outputs.ready == 'true'
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: supabase db push --db-url "$SUPABASE_DB_URL"
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Add the SUPABASE_DB_URL secret (Supabase → Connect → Session pooler URI) before migrating."
+            exit 1
+          fi
+          supabase db push --db-url "$SUPABASE_DB_URL"
