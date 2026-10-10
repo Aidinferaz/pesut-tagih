@@ -1,1 +1,185 @@
 @import "tailwindcss";
+
+/*
+ * Cat Kapal Mahakam — the palette of the painted wooden boats on the Mahakam.
+ * River-teal shell, hull-white ground, a yellow band and red waterline as the
+ * only ornament, life-ring orange for actions. Flat enamel: no gradients.
+ *
+ * Theme: light by default, dark follows the OS unless the person picked one
+ * (stored on <html data-theme>). Every colour below is a token; components
+ * never hard-code hex values.
+ */
+/* light-dark(light, dark): both values of each token sit side by side. */
+:root {
+  color-scheme: light dark;
+  --rail: light-dark(#0b5d5e, #062a2c);
+  --rail-deep: light-dark(#082f33, #031b1d);
+  --rail-ink: light-dark(#f3f5f0, #eef3ee);
+  --rail-ink-soft: light-dark(#b9d3cf, #9dbcb8);
+  --ground: light-dark(#f3f5f0, #0b2225);
+  --surface: light-dark(#ffffff, #0f2e31);
+  --surface-sunk: light-dark(#e9eee9, #0a2629);
+  --ink: light-dark(#082f33, #eef3ee);
+  --ink-soft: light-dark(#3e5c5e, #c2d4d1);
+  --muted: light-dark(#56706e, #8fa9a6);
+  --line: light-dark(#dce3dd, #20474a);
+  --line-strong: light-dark(#082f33, #3d6e71);
+  --band: #f4c21b;
+  --debt: light-dark(#c2321f, #ff6b5c);
+  --credit: light-dark(#17764c, #4cc98e);
+  --action: light-dark(#f2781e, #ff8a3d);
+  --action-ink: light-dark(#082f33, #062a2c);
+  --plate: light-dark(#0b5d5e, #0e6b6c);
+  --plate-ink: #f4c21b;
+  --water: light-dark(#0b5d5e, #0e4f51);
+  --water-foam: light-dark(#d9e7e3, #1d5c5e);
+  --focus: #f4c21b;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+  &:where([data-theme="dark"] *) {
+    @slot;
+  }
+}
+
+@theme inline {
+  --color-rail: var(--rail);
+  --color-rail-deep: var(--rail-deep);
+  --color-rail-ink: var(--rail-ink);
+  --color-rail-ink-soft: var(--rail-ink-soft);
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-band: var(--band);
+  --color-debt: var(--debt);
+  --color-credit: var(--credit);
+  --color-action: var(--action);
+  --color-action-ink: var(--action-ink);
+  --color-plate: var(--plate);
+  --color-plate-ink: var(--plate-ink);
+  --color-water: var(--water);
+  --color-water-foam: var(--water-foam);
+
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-big-shoulders), var(--font-figtree), sans-serif;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-hull: cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 0;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--band);
+    color: #082f33;
+  }
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  input,
+  textarea {
+    caret-color: var(--action);
+  }
+  a {
+    text-underline-offset: 0.2em;
+  }
+}
+
+@layer components {
+  /* Figures and headings in the painted-sign voice: condensed caps, optical size maxed. */
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 72;
+    font-weight: 800;
+    letter-spacing: 0.005em;
+    line-height: 0.95;
+  }
+  .figure {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 72;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+  .label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* The yellow band over the red waterline, as painted along a hull. */
+  .hull-stripe {
+    height: 6px;
+    background: var(--band);
+    box-shadow: 0 10px 0 var(--debt);
+    margin-bottom: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Balance hull: settle to its waterline once, then ride the swell. */
+@keyframes hull-settle {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(var(--sink, 0));
+  }
+}
+@keyframes hull-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(-0.6deg);
+  }
+}
+.hull-settle {
+  animation: hull-settle 1.6s var(--ease-hull) 0.2s both;
+}
+.hull-bob {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hull-bob 4.2s ease-in-out infinite;
+}
