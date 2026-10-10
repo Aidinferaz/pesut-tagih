@@ -58,3 +58,7 @@ DESIGN.*.json
 # supabase local state
 supabase/.branches
 supabase/.temp
+
+# playwright
+/test-results/
+/playwright-report/

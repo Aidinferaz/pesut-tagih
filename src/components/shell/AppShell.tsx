@@ -8,26 +8,6 @@ import { NAV } from "./nav";
 import { NavLink } from "./NavLink";
 import { ThemeSwitch } from "./ThemeSwitch";
 
-export type ShellGroup = { id: string; name: string; hull: "band" | "action" | "surface" | "debt" };
-
-const HULL: Record<ShellGroup["hull"], string> = {
-  band: "bg-band",
-  action: "bg-action",
-  surface: "bg-rail-ink",
-  debt: "bg-debt",
-};
-
-/** A group's colour, painted as a little hull with a raised bow. */
-function HullSwatch({ hull }: { hull: ShellGroup["hull"] }) {
-  return (
-    <i
-      aria-hidden
-      className={`block h-4 w-8 shrink-0 ${HULL[hull]}`}
-      style={{ clipPath: "polygon(0 0, 100% 0, 82% 100%, 0 100%)" }}
-    />
-  );
-}
-
 function Wordmark({ size = "lg" }: { size?: "lg" | "sm" }) {
   return (
     <span className={`display block uppercase ${size === "lg" ? "text-[2.125rem]" : "text-2xl"}`}>
@@ -40,14 +20,13 @@ function Wordmark({ size = "lg" }: { size?: "lg" | "sm" }) {
 export function AppShell({
   locale,
   t,
-  groups,
-  activeGroupId,
+  groupsSlot,
   children,
 }: {
   locale: Locale;
   t: Dictionary;
-  groups: ShellGroup[];
-  activeGroupId?: string;
+  /** The rail's group list; streamed in because it depends on who is signed in. */
+  groupsSlot: ReactNode;
   children: ReactNode;
 }) {
   const href = (path: string) => `/${locale}${path}`;
@@ -79,29 +58,14 @@ export function AppShell({
           <h2 className="text-rail-ink-soft mb-2 text-xs font-bold tracking-[0.12em] uppercase">
             {t.nav.groups}
           </h2>
-          <ul className="flex flex-col">
-            {groups.map((group) => (
-              <li key={group.id}>
-                <Link
-                  href={href(`/groups/${group.id}`)}
-                  aria-current={group.id === activeGroupId ? "true" : undefined}
-                  className="aria-[current]:decoration-band flex items-center gap-3 rounded-md px-1 py-1.5 text-[0.9375rem] font-semibold aria-[current]:underline aria-[current]:decoration-2"
-                >
-                  <HullSwatch hull={group.hull} />
-                  {group.name}
-                </Link>
-              </li>
-            ))}
-            <li>
-              <Link
-                href={href("/groups/new")}
-                className="text-rail-ink-soft hover:text-rail-ink mt-1 flex items-center gap-3 rounded-md px-1 py-1.5 text-sm font-semibold"
-              >
-                <Plus className="size-4" strokeWidth={2.5} aria-hidden />
-                {t.nav.newGroup}
-              </Link>
-            </li>
-          </ul>
+          {groupsSlot}
+          <Link
+            href={href("/groups/new")}
+            className="text-rail-ink-soft hover:text-rail-ink mt-1 flex items-center gap-3 rounded-md px-1 py-1.5 text-sm font-semibold"
+          >
+            <Plus className="size-4" strokeWidth={2.5} aria-hidden />
+            {t.nav.newGroup}
+          </Link>
         </div>
 
         <div className="mt-auto flex items-center justify-between">

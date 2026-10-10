@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultLocale, isLocale, LOCALE_COOKIE, type Locale } from "@/i18n/config";
+import { refreshSession } from "@/server/supabase/session";
 
 /** Cookie first (an explicit choice), then the browser's languages, then Indonesian. */
 function preferredLocale(request: NextRequest): Locale {
@@ -14,14 +15,17 @@ function preferredLocale(request: NextRequest): Locale {
   return defaultLocale;
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const first = pathname.split("/")[1] ?? "";
-  if (isLocale(first)) return NextResponse.next();
 
-  const url = request.nextUrl.clone();
-  url.pathname = `/${preferredLocale(request)}${pathname === "/" ? "" : pathname}`;
-  return NextResponse.redirect(url);
+  if (!isLocale(first) && first !== "auth") {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${preferredLocale(request)}${pathname === "/" ? "" : pathname}`;
+    return NextResponse.redirect(url);
+  }
+
+  return refreshSession(request, NextResponse.next({ request }));
 }
 
 export const config = {
