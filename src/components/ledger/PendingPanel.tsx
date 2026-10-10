@@ -1,5 +1,6 @@
 import { ImageIcon } from "lucide-react";
 import { buttonClass } from "@/components/ui/Button";
+import { Plate } from "@/components/ui/Plate";
 import { Panel, PanelTitle } from "@/components/ui/Panel";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries/id";
@@ -45,8 +46,8 @@ export function PendingPanel({
           return (
             <li key={s.id} className="border-line grid gap-2 border-b-2 py-3 last:border-0">
               <p>
-                <span className="text-muted mr-2 font-semibold tabular-nums">
-                  {plateNumber("PT", s.number)}
+                <span className="mr-2">
+                  <Plate size="sm">{plateNumber("PT", s.number)}</Plate>
                 </span>
                 <span className="font-bold">
                   {format(incoming ? t.pending.incoming : t.pending.outgoing, {

@@ -64,8 +64,15 @@ const ExpenseInput = z
 export type ExpenseInput = z.input<typeof ExpenseInput>;
 
 /** Recomputes the split on the server from the raw inputs, then stores it in one transaction. */
-export async function createExpense(_prev: FormState, formData: FormData): Promise<FormState> {
-  if (!(await getCurrentUser())) return { status: "error", error: "notSignedIn" };
+type ParsedExpense = z.output<typeof ExpenseInput>;
+type Computed = {
+  input: ParsedExpense;
+  total: number;
+  shares: { user_id: string; amount: number }[];
+};
+
+/** Reads the form payload and recomputes the split on the server; the browser's preview is never trusted. */
+function computeExpense(formData: FormData): Computed | FormState {
   let raw: unknown;
   try {
     raw = JSON.parse(String(formData.get("payload") ?? ""));
@@ -81,7 +88,6 @@ export async function createExpense(_prev: FormState, formData: FormData): Promi
     };
   }
   const input = parsed.data;
-
   let total: number;
   let shares: { userId: string; amount: number }[];
   try {
@@ -101,6 +107,27 @@ export async function createExpense(_prev: FormState, formData: FormData): Promi
     throw error;
   }
   if (total <= 0) return { status: "error", error: "invalid", field: "total" };
+  return {
+    input,
+    total,
+    shares: shares
+      .filter((s) => s.amount > 0)
+      .map((s) => ({ user_id: s.userId, amount: s.amount })),
+  };
+}
+
+const itemsForDb = (input: ParsedExpense) =>
+  input.items.map((i) => ({
+    name: i.name,
+    amount: i.amount,
+    claims: i.claims.map((c) => ({ user_id: c.userId, weight: c.weight })),
+  }));
+
+export async function createExpense(_prev: FormState, formData: FormData): Promise<FormState> {
+  if (!(await getCurrentUser())) return { status: "error", error: "notSignedIn" };
+  const computed = computeExpense(formData);
+  if ("status" in computed) return computed;
+  const { input, total, shares } = computed;
 
   const supabase = await supabaseForUser();
   const { data: expenseId, error } = await supabase.rpc("create_expense", {
@@ -109,14 +136,8 @@ export async function createExpense(_prev: FormState, formData: FormData): Promi
     expense_total: total,
     payer: input.paidBy,
     method: input.method,
-    shares: shares
-      .filter((s) => s.amount > 0)
-      .map((s) => ({ user_id: s.userId, amount: s.amount })),
-    items: input.items.map((i) => ({
-      name: i.name,
-      amount: i.amount,
-      claims: i.claims.map((c) => ({ user_id: c.userId, weight: c.weight })),
-    })),
+    shares,
+    items: itemsForDb(input),
     tax_amount: input.tax,
     service_amount: input.service,
     discount_amount: input.discount,
@@ -133,6 +154,35 @@ export async function createExpense(_prev: FormState, formData: FormData): Promi
   // From the chat the person stays in the conversation; from the form they go to the group.
   if (formData.get("stay") === "1") return { status: "ok", data: undefined };
   redirect(`/${lang}/groups/${input.groupId}?logged=1`);
+}
+
+export async function updateExpense(_prev: FormState, formData: FormData): Promise<FormState> {
+  if (!(await getCurrentUser())) return { status: "error", error: "notSignedIn" };
+  const expenseId = z.uuid().safeParse(formData.get("expenseId"));
+  if (!expenseId.success) return { status: "error", error: "invalid" };
+  const computed = computeExpense(formData);
+  if ("status" in computed) return computed;
+  const { input, total, shares } = computed;
+
+  const supabase = await supabaseForUser();
+  const { error } = await supabase.rpc("update_expense", {
+    eid: expenseId.data,
+    expense_title: input.title,
+    expense_total: total,
+    payer: input.paidBy,
+    method: input.method,
+    shares,
+    items: itemsForDb(input),
+    tax_amount: input.tax,
+    service_amount: input.service,
+    discount_amount: input.discount,
+    on_date: input.occurredOn,
+    expense_note: input.note,
+  });
+  if (error) return { status: "error", error: errorKeyFor(error.code) };
+  const lang = langOf(formData);
+  revalidatePath(`/${lang}`, "layout");
+  redirect(`/${lang}/groups/${input.groupId}`);
 }
 
 export async function deleteExpense(formData: FormData) {

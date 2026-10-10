@@ -1,7 +1,16 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
-import { useActionState, useCallback, useId, useMemo, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Field, FormMessage, inputClass, TextInput } from "@/components/forms/fields";
 import { Button } from "@/components/ui/Button";
 import { parseRupiah } from "@/domain/money";
@@ -16,7 +25,7 @@ import {
 import { format } from "@/i18n/format";
 import { useI18n } from "@/i18n/provider";
 import { rupiah } from "@/lib/format";
-import { createExpense, type ExpenseInput } from "@/server/actions/ledger";
+import { createExpense, updateExpense, type ExpenseInput } from "@/server/actions/ledger";
 import type { FormState } from "@/server/actions/state";
 import type { ParsedExpense, ScannedReceipt } from "@/server/actions/ai";
 import { ExpenseHelpers } from "./ExpenseHelpers";
@@ -24,6 +33,21 @@ import { ExpenseHelpers } from "./ExpenseHelpers";
 type Member = { id: string; name: string };
 type Method = "equal" | "exact" | "itemized";
 type Item = { key: number; name: string; amount: string; owners: string[] };
+
+/** An existing expense to edit, in the form's own terms. */
+export type ExpenseDraft = {
+  expenseId: string;
+  title: string;
+  total: string;
+  paidBy: string;
+  occurredOn: string;
+  note: string;
+  method: Method;
+  participants: string[];
+  exact: Record<string, string>;
+  items: Item[];
+  extras: { tax: string; service: string; discount: string };
+};
 
 const amountOf = (text: string) => (text.trim() === "" ? 0 : parseRupiah(text));
 
@@ -36,33 +60,76 @@ function todayWita() {
  * Logging an expense. The split is previewed live with the same domain code
  * the server uses; the server recomputes it from the raw inputs anyway.
  */
-export function ExpenseForm({
-  groupId,
-  members,
-  me,
-  aiEnabled,
-}: {
+type ExpenseFormProps = {
   groupId: string;
   members: Member[];
   me: string;
   aiEnabled: boolean;
-}) {
+  /** When set, the form edits this expense instead of logging a new one. */
+  initial?: ExpenseDraft;
+};
+
+/**
+ * Next keeps visited pages alive (hidden) for instant back navigation. After
+ * a successful save the form must not come back pre-filled, or the same
+ * expense could be logged twice; an unsaved draft is kept.
+ */
+export function ExpenseForm(props: ExpenseFormProps) {
+  const [generation, setGeneration] = useState(0);
+  const submitted = useRef(false);
+  useLayoutEffect(
+    () => () => {
+      if (!submitted.current) return;
+      submitted.current = false;
+      setGeneration((g) => g + 1);
+    },
+    [],
+  );
+  return (
+    <ExpenseFormFields
+      key={generation}
+      {...props}
+      onSubmitted={() => (submitted.current = true)}
+      onFailed={() => (submitted.current = false)}
+    />
+  );
+}
+
+function ExpenseFormFields({
+  groupId,
+  members,
+  me,
+  aiEnabled,
+  initial,
+  onSubmitted,
+  onFailed,
+}: ExpenseFormProps & { onSubmitted: () => void; onFailed: () => void }) {
   const { t, locale } = useI18n();
   const ids = useId();
-  const [state, action, pending] = useActionState<FormState, FormData>(createExpense, {
-    status: "idle",
-  });
+  const [state, action, pending] = useActionState<FormState, FormData>(
+    initial ? updateExpense : createExpense,
+    { status: "idle" },
+  );
 
-  const [title, setTitle] = useState("");
-  const [total, setTotal] = useState("");
-  const [paidBy, setPaidBy] = useState(me);
-  const [date, setDate] = useState(todayWita);
-  const [note, setNote] = useState("");
-  const [method, setMethod] = useState<Method>("equal");
-  const [participants, setParticipants] = useState<string[]>(members.map((m) => m.id));
-  const [exact, setExact] = useState<Record<string, string>>({});
-  const [items, setItems] = useState<Item[]>([{ key: 0, name: "", amount: "", owners: [] }]);
-  const [extras, setExtras] = useState({ tax: "", service: "", discount: "" });
+  // A refused save keeps the draft.
+  useEffect(() => {
+    if (state.status === "error") onFailed();
+  }, [state, onFailed]);
+
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [total, setTotal] = useState(initial?.total ?? "");
+  const [paidBy, setPaidBy] = useState(initial?.paidBy ?? me);
+  const [date, setDate] = useState(() => initial?.occurredOn ?? todayWita());
+  const [note, setNote] = useState(initial?.note ?? "");
+  const [method, setMethod] = useState<Method>(initial?.method ?? "equal");
+  const [participants, setParticipants] = useState<string[]>(
+    initial?.participants ?? members.map((m) => m.id),
+  );
+  const [exact, setExact] = useState<Record<string, string>>(initial?.exact ?? {});
+  const [items, setItems] = useState<Item[]>(
+    initial?.items.length ? initial.items : [{ key: 0, name: "", amount: "", owners: [] }],
+  );
+  const [extras, setExtras] = useState(initial?.extras ?? { tax: "", service: "", discount: "" });
   const [receiptPath, setReceiptPath] = useState<string | undefined>();
 
   // Pesut's helpers fill the same fields a person would.
@@ -165,10 +232,11 @@ export function ExpenseForm({
       : t.errors.invalid;
 
   return (
-    <form action={action} className="grid gap-6">
+    <form action={action} onSubmit={onSubmitted} className="grid gap-6">
       <input type="hidden" name="lang" value={locale} />
+      {initial && <input type="hidden" name="expenseId" value={initial.expenseId} />}
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
-      {aiEnabled && (
+      {aiEnabled && !initial && (
         <ExpenseHelpers groupId={groupId} onReceipt={fromReceipt} onParsed={fromText} />
       )}
 
@@ -404,10 +472,10 @@ export function ExpenseForm({
               </li>
             ))}
           </ul>
+        ) : preview.error === "total" ? (
+          <p className="text-ink-soft mt-2 text-sm">{t.expenseForm.summaryHint}</p>
         ) : (
-          preview.error !== "total" && (
-            <p className="text-debt mt-2 text-sm font-semibold">{errorText(preview.error)}</p>
-          )
+          <p className="text-debt mt-2 text-sm font-semibold">{errorText(preview.error)}</p>
         )}
       </section>
 
@@ -418,7 +486,7 @@ export function ExpenseForm({
       )}
       <div>
         <Button type="submit" disabled={!ready || pending} className="min-h-12 px-6">
-          {t.expenseForm.save}
+          {initial ? t.expenseForm.saveChanges : t.expenseForm.save}
         </Button>
       </div>
     </form>
@@ -484,7 +552,7 @@ function PeoplePicker({
             type="button"
             aria-pressed={on}
             onClick={() => onToggle(m.id)}
-            className={`min-h-10 rounded-full border-2 px-3.5 text-sm font-bold transition-colors ${
+            className={`min-h-10 rounded-md border-2 px-3.5 text-sm font-bold transition-colors ${
               on
                 ? "border-line-strong bg-plate text-plate-ink"
                 : "border-line text-ink-soft hover:border-line-strong"

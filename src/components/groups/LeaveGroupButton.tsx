@@ -1,5 +1,6 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import { useActionState } from "react";
 import { FormMessage } from "@/components/forms/fields";
 import { Button } from "@/components/ui/Button";
@@ -23,7 +24,13 @@ export function LeaveGroupButton({ groupId }: { groupId: string }) {
       <input type="hidden" name="lang" value={locale} />
       <input type="hidden" name="groupId" value={groupId} />
       <div>
-        <Button type="submit" variant="ghost" disabled={pending} className="text-debt">
+        <Button
+          type="submit"
+          variant="outline"
+          disabled={pending}
+          className="border-debt text-debt"
+        >
+          <LogOut className="size-4" aria-hidden />
           {t.groups.leave}
         </Button>
       </div>

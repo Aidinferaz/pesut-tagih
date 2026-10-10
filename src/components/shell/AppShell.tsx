@@ -77,19 +77,27 @@ export function AppShell({
       </aside>
 
       {/* Mobile top bar */}
-      <header className="bg-rail text-rail-ink sticky top-0 z-30 flex items-center justify-between px-4 py-3 lg:hidden">
-        <Link href={href("/home")} className="rounded-md">
-          <Wordmark size="sm" />
-        </Link>
-        <div className="flex items-center gap-1">
-          <LanguageSwitch />
-          <Link
-            href={href("/settings")}
-            aria-label={t.nav.settings}
-            className="text-rail-ink-soft hover:text-rail-ink grid size-9 place-items-center rounded-md"
-          >
-            <Settings className="size-5" strokeWidth={2.25} aria-hidden />
+      <header className="sticky top-0 z-30 lg:hidden">
+        <div className="bg-rail text-rail-ink flex items-center justify-between px-4 py-3">
+          <Link href={href("/home")} className="rounded-md">
+            <Wordmark size="sm" />
           </Link>
+          <div className="flex items-center gap-1">
+            <LanguageSwitch />
+            <Link
+              href={href("/settings")}
+              aria-label={t.nav.settings}
+              className="text-rail-ink-soft hover:text-rail-ink grid size-9 place-items-center rounded-md"
+            >
+              <Settings className="size-5" strokeWidth={2.25} aria-hidden />
+            </Link>
+          </div>
+        </div>
+        {/* The hull's yellow band over the red waterline, as on the rail and landing. */}
+        <div aria-hidden className="bg-ground">
+          <div className="bg-band h-1.5" />
+          <div className="h-1" />
+          <div className="bg-debt h-1.5" />
         </div>
       </header>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import * as THREE from "three";
 import {
@@ -46,14 +46,36 @@ export default function PesutScene(props: PesutSceneProps) {
       dpr={[1, 2]}
       camera={{ position: [0, 2, 7.6], fov: 30 }}
       gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
-      onCreated={({ camera }) => camera.lookAt(0, 0.95, 0)}
     >
       <hemisphereLight args={["#ffffff", "#0b5d5e", 1.25]} />
       <directionalLight position={[4, 6, 5]} intensity={1.7} />
+      <FitCamera />
       <River water={props.water} foam={props.foam} />
       <Rig {...props} />
     </Canvas>
   );
+}
+
+/** What the camera must always show, in world units: Pesut plus room to jump. */
+const FRAME = { width: 4.4, height: 2.6, target: new THREE.Vector3(0.35, 0.55, 0) };
+const VIEW_DIRECTION = new THREE.Vector3(0, 0.27, 1).normalize();
+
+/**
+ * Pulls the camera back just far enough for the panel's shape: a narrow
+ * phone panel and a wide desktop one both show the whole dolphin.
+ */
+function FitCamera() {
+  const camera = useThree((state) => state.camera) as THREE.PerspectiveCamera;
+  const size = useThree((state) => state.size);
+  useLayoutEffect(() => {
+    const half = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+    const aspect = size.width / Math.max(1, size.height);
+    const distance = Math.max(FRAME.height / (2 * half), FRAME.width / (2 * half * aspect)) * 1.15;
+    camera.position.copy(VIEW_DIRECTION).multiplyScalar(distance).add(FRAME.target);
+    camera.lookAt(FRAME.target);
+    camera.updateProjectionMatrix();
+  }, [camera, size]);
+  return null;
 }
 
 /**
@@ -188,7 +210,7 @@ function Rig({ still, pointer }: PesutSceneProps) {
 
   return (
     <>
-      <group ref={root} scale={SCALE} position-x={0.7}>
+      <group ref={root} scale={SCALE} position-x={0.55}>
         <VoxelMesh voxels={body} />
         <VoxelMesh voxels={eyes} meshRef={eyeMesh} />
         <group ref={finLRef} position={[FIN_PIVOT.x, FIN_PIVOT.y, finZ]}>

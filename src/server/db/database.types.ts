@@ -530,6 +530,9 @@ isOneToOne: false
                            },
 "unlink_telegram_group":
 { Args: { "gid": string }; Returns: undefined
+                           },
+"update_expense":
+{ Args: { "discount_amount"?: number,"eid": string,"expense_note"?: string,"expense_title": string,"expense_total": number,"items"?: Json,"method": string,"on_date"?: string,"payer": string,"service_amount"?: number,"shares": Json,"tax_amount"?: number }; Returns: undefined
                            }
           }
           Enums: {

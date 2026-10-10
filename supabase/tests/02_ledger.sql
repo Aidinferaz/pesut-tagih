@@ -1,6 +1,6 @@
 -- Ledger functions: expenses, transfers and recurring bills.
 begin;
-select plan(24);
+select plan(27);
 
 create schema if not exists tests;
 create or replace function tests.act_as(uid uuid) returns void language plpgsql as $$
@@ -99,6 +99,24 @@ select throws_ok(
   $$ select public.decide_settlement((select sid from ctx), false, 'changed my mind') $$,
   '22023', null, 'a decided transfer cannot be decided again'
 );
+
+-- Editing: C can't, A can; the number stays and the change is logged.
+select tests.act_as('00000000-0000-0000-0000-0000000000c1');
+select throws_ok(
+  $$ select public.update_expense((select eid from ctx), 'Mine now', 3, '00000000-0000-0000-0000-0000000000c1', 'equal',
+       '[{"user_id":"00000000-0000-0000-0000-0000000000c1","amount":3}]'::jsonb) $$,
+  '42501', null, 'members cannot edit someone else''s expense'
+);
+select tests.act_as('00000000-0000-0000-0000-0000000000a1');
+select public.update_expense((select eid from ctx), 'Nasi kuning + teh', 120000, '00000000-0000-0000-0000-0000000000a1', 'equal',
+  '[{"user_id":"00000000-0000-0000-0000-0000000000a1","amount":60000},
+    {"user_id":"00000000-0000-0000-0000-0000000000b1","amount":60000}]'::jsonb);
+select results_eq(
+  $$ select number, total from public.expenses where id = (select eid from ctx) $$,
+  $$ values (1, 120000::bigint) $$,
+  'an edit keeps the registration number and changes the total'
+);
+select ok(exists (select 1 from public.activity_log where action = 'expense.updated'), 'the edit is logged with before and after');
 
 -- C cannot delete A's expense; A can, and it stays in the log.
 select tests.act_as('00000000-0000-0000-0000-0000000000c1');

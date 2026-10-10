@@ -107,57 +107,61 @@ export function NotificationsPanel({
       <p className="text-ink-soft mt-2 max-w-prose">{t.notifications.body}</p>
 
       <div className="mt-5 grid gap-5">
-        <section className="border-line grid gap-2 border-t-2 pt-4">
-          <h3 className="font-bold">{t.notifications.telegram}</h3>
-          {!telegramBot ? (
-            <p className="text-muted text-sm">{t.notifications.telegramOff}</p>
-          ) : telegramLinked ? (
-            <form action={unlinkTelegram} className="flex flex-wrap items-center gap-3">
-              <input type="hidden" name="lang" value={locale} />
-              <span className="text-credit font-semibold">{t.notifications.telegramLinked}</span>
-              <Button type="submit" variant="ghost" className="text-sm">
-                {t.notifications.telegramUnlink}
-              </Button>
-            </form>
-          ) : (
-            <div className="grid gap-2">
-              <div>
-                <Button variant="outline" onClick={connectTelegram} disabled={busy}>
-                  <Send className="size-4" aria-hidden />
-                  {t.notifications.telegramConnect}
+        {telegramBot && (
+          <section className="border-line grid gap-2 border-t-2 pt-4">
+            <h3 className="font-bold">{t.notifications.telegram}</h3>
+            {telegramLinked ? (
+              <form action={unlinkTelegram} className="flex flex-wrap items-center gap-3">
+                <input type="hidden" name="lang" value={locale} />
+                <span className="text-credit font-semibold">{t.notifications.telegramLinked}</span>
+                <Button type="submit" variant="ghost" className="text-sm">
+                  {t.notifications.telegramUnlink}
+                </Button>
+              </form>
+            ) : (
+              <div className="grid gap-2">
+                <div>
+                  <Button variant="outline" onClick={connectTelegram} disabled={busy}>
+                    <Send className="size-4" aria-hidden />
+                    {t.notifications.telegramConnect}
+                  </Button>
+                </div>
+                <p className="text-ink-soft text-sm">{t.notifications.telegramOpen}</p>
+                {linkError && <FormMessage tone="error">{t.errors.unknown}</FormMessage>}
+              </div>
+            )}
+          </section>
+        )}
+
+        {vapidKey && (
+          <section className="border-line grid gap-2 border-t-2 pt-4">
+            <h3 className="font-bold">{t.notifications.push}</h3>
+            {push === "unsupported" ? (
+              <p className="text-ink-soft text-sm">{t.notifications.pushUnsupported}</p>
+            ) : push === "denied" ? (
+              <p className="text-debt text-sm">{t.notifications.pushDenied}</p>
+            ) : push === "on" ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-credit font-semibold">{t.notifications.pushEnabled}</span>
+                <Button variant="ghost" className="text-sm" onClick={disablePush} disabled={busy}>
+                  <BellOff className="size-4" aria-hidden />
+                  {t.notifications.pushDisable}
                 </Button>
               </div>
-              <p className="text-ink-soft text-sm">{t.notifications.telegramOpen}</p>
-              {linkError && <FormMessage tone="error">{t.errors.unknown}</FormMessage>}
-            </div>
-          )}
-        </section>
-
-        <section className="border-line grid gap-2 border-t-2 pt-4">
-          <h3 className="font-bold">{t.notifications.push}</h3>
-          {!vapidKey ? (
-            <p className="text-muted text-sm">{t.notifications.pushOff}</p>
-          ) : push === "unsupported" ? (
-            <p className="text-ink-soft text-sm">{t.notifications.pushUnsupported}</p>
-          ) : push === "denied" ? (
-            <p className="text-debt text-sm">{t.notifications.pushDenied}</p>
-          ) : push === "on" ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-credit font-semibold">{t.notifications.pushEnabled}</span>
-              <Button variant="ghost" className="text-sm" onClick={disablePush} disabled={busy}>
-                <BellOff className="size-4" aria-hidden />
-                {t.notifications.pushDisable}
-              </Button>
-            </div>
-          ) : (
-            <div>
-              <Button variant="outline" onClick={enablePush} disabled={busy || push === "unknown"}>
-                <Bell className="size-4" aria-hidden />
-                {t.notifications.pushEnable}
-              </Button>
-            </div>
-          )}
-        </section>
+            ) : (
+              <div>
+                <Button
+                  variant="outline"
+                  onClick={enablePush}
+                  disabled={busy || push === "unknown"}
+                >
+                  <Bell className="size-4" aria-hidden />
+                  {t.notifications.pushEnable}
+                </Button>
+              </div>
+            )}
+          </section>
+        )}
 
         <form action={action} className="border-line grid gap-4 border-t-2 pt-4">
           <input type="hidden" name="lang" value={locale} />
@@ -182,24 +186,32 @@ export function NotificationsPanel({
           <p id="wa-hint" className="text-muted -mt-2 text-sm">
             {t.notifications.waHint}
           </p>
+          {/* Channels this server can't deliver on keep their saved choice. */}
+          {!telegramBot && channels.telegram && <input type="hidden" name="telegram" value="on" />}
+          {!vapidKey && channels.push && <input type="hidden" name="push" value="on" />}
+          {!whatsappGateway && channels.whatsapp && (
+            <input type="hidden" name="whatsapp" value="on" />
+          )}
           <fieldset className="grid gap-2">
             {(
               [
-                ["telegram", t.notifications.telegram, channels.telegram],
-                ["push", t.notifications.push, channels.push],
-                ["whatsapp", t.notifications.whatsapp, channels.whatsapp],
+                ["telegram", t.notifications.telegram, channels.telegram, telegramBot],
+                ["push", t.notifications.push, channels.push, Boolean(vapidKey)],
+                ["whatsapp", t.notifications.whatsapp, channels.whatsapp, whatsappGateway],
               ] as const
-            ).map(([name, label, checked]) => (
-              <label key={name} className="flex items-center gap-3 font-semibold">
-                <input
-                  type="checkbox"
-                  name={name}
-                  defaultChecked={checked}
-                  className="size-5 accent-[var(--plate)]"
-                />
-                {format(t.notifications.receive, { channel: label })}
-              </label>
-            ))}
+            )
+              .filter(([, , , available]) => available)
+              .map(([name, label, checked]) => (
+                <label key={name} className="flex items-center gap-3 font-semibold">
+                  <input
+                    type="checkbox"
+                    name={name}
+                    defaultChecked={checked}
+                    className="size-5 accent-[var(--plate)]"
+                  />
+                  {format(t.notifications.receive, { channel: label })}
+                </label>
+              ))}
           </fieldset>
           <div className="flex items-center gap-3">
             <Button type="submit" disabled={pending}>

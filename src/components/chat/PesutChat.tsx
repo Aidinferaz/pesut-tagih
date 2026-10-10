@@ -128,7 +128,7 @@ export function PesutChat({ enabled }: { enabled: boolean }) {
                 key={s}
                 type="button"
                 onClick={() => send(s)}
-                className="border-line hover:border-line-strong min-h-10 rounded-full border-2 px-3.5 text-left text-sm font-semibold"
+                className="border-line hover:border-line-strong min-h-10 rounded-md border-2 px-3.5 text-left text-sm font-semibold"
               >
                 {s}
               </button>

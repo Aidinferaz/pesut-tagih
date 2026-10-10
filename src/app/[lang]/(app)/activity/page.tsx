@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { Plate } from "@/components/ui/Plate";
 import { Panel } from "@/components/ui/Panel";
 import { intlLocale, isLocale, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries/id";
@@ -86,8 +87,8 @@ async function Feed({ lang, t }: { lang: Locale; t: Dictionary }) {
           >
             <p>
               {typeof entry.details.number === "number" && (
-                <span className="text-muted mr-2 font-semibold tabular-nums">
-                  {plateNumber("PT", entry.details.number)}
+                <span className="mr-2">
+                  <Plate size="sm">{plateNumber("PT", entry.details.number)}</Plate>
                 </span>
               )}
               <span className="font-semibold">{describe(entry, names, t, lang)}</span>

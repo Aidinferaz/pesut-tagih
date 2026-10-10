@@ -14,7 +14,9 @@ import type { Dictionary } from "@/i18n/dictionaries/id";
 import { format } from "@/i18n/format";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { requireUser } from "@/server/auth";
-import { listMyBooks } from "@/server/db/ledger";
+import { listMyBooks, viewForMember } from "@/server/db/ledger";
+import { env } from "@/server/env";
+import { RoutesPanel } from "@/components/ledger/RoutesPanel";
 import { getProfile } from "@/server/db/profile";
 import { rupiah } from "@/lib/format";
 
@@ -49,6 +51,11 @@ async function HomeContent({ lang, t }: { lang: Locale; t: Dictionary }) {
     ).length;
     return { book, balance: book.balances.get(user.id) ?? 0, outgoing, incoming, waiting };
   });
+  const views = await Promise.all(
+    rows
+      .filter((r) => r.outgoing.length + r.incoming.length > 0)
+      .map(async (r) => ({ book: r.book, view: await viewForMember(r.book, user.id) })),
+  );
   const total = rows.reduce((sum, r) => sum + r.balance, 0);
   const scale = Math.max(
     1,
@@ -110,61 +117,85 @@ async function HomeContent({ lang, t }: { lang: Locale; t: Dictionary }) {
       )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.15fr_1fr] lg:gap-7">
-        <div className="grid min-w-0 content-start gap-5 lg:gap-7">
-          {books.length > 0 && (
-            <BalancePanel
-              title={t.groups.totalBalance}
-              balance={total}
-              scale={scale}
-              oweCount={outgoing.length}
-              owedCount={incoming.length}
-              t={t}
-              locale={lang}
-            />
-          )}
-          {books.length === 0 ? (
-            <Panel aria-labelledby="onboarding-title">
-              <PanelTitle id="onboarding-title">{t.onboarding.title}</PanelTitle>
-              <p className="text-ink-soft mt-3 max-w-prose">{t.onboarding.body}</p>
-              <Link href={`/${lang}/groups/new`} className={buttonClass("primary", "mt-5")}>
-                <Plus className="size-[18px]" strokeWidth={2.75} aria-hidden />
-                {t.onboarding.create}
-              </Link>
-            </Panel>
-          ) : (
-            <Panel aria-labelledby="groups-title">
-              <PanelTitle id="groups-title">{t.groups.yours}</PanelTitle>
-              <ul className="mt-3">
-                {rows.map(({ book, balance }) => (
-                  <li key={book.group.id} className="border-line border-b-2 last:border-0">
-                    <Link
-                      href={`/${lang}/groups/${book.group.id}`}
-                      className="hover:bg-surface-sunk flex items-center gap-4 rounded-md py-3.5"
-                    >
-                      <HullSwatch hull={book.group.hull} className="h-5 w-10" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-bold">{book.group.name}</span>
-                        <span className="text-ink-soft text-sm">
-                          {format(t.groups.members, { count: book.group.members.length })}
-                        </span>
-                      </span>
-                      <span
-                        className={`figure text-xl ${balance < 0 ? "text-debt" : balance > 0 ? "text-credit" : "text-ink-soft"}`}
+        {/* Two columns on desktop; on phones the wrappers dissolve and `order` sets the stack. */}
+        <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-7">
+          <div className="order-1 empty:hidden lg:order-none">
+            {books.length > 0 && (
+              <BalancePanel
+                title={t.groups.totalBalance}
+                balance={total}
+                scale={scale}
+                oweCount={outgoing.length}
+                owedCount={incoming.length}
+                t={t}
+                locale={lang}
+              />
+            )}
+          </div>
+          <div className="order-4 lg:order-none">
+            {books.length === 0 ? (
+              <Panel aria-labelledby="onboarding-title">
+                <PanelTitle id="onboarding-title">{t.onboarding.title}</PanelTitle>
+                <p className="text-ink-soft mt-3 max-w-prose">{t.onboarding.body}</p>
+                <Link href={`/${lang}/groups/new`} className={buttonClass("primary", "mt-5")}>
+                  <Plus className="size-[18px]" strokeWidth={2.75} aria-hidden />
+                  {t.onboarding.create}
+                </Link>
+              </Panel>
+            ) : (
+              <Panel aria-labelledby="groups-title">
+                <PanelTitle id="groups-title">{t.groups.yours}</PanelTitle>
+                <ul className="mt-3">
+                  {rows.map(({ book, balance }) => (
+                    <li key={book.group.id} className="border-line border-b-2 last:border-0">
+                      <Link
+                        href={`/${lang}/groups/${book.group.id}`}
+                        className="hover:bg-surface-sunk flex items-center gap-4 rounded-md py-3.5"
                       >
-                        {rupiah(balance, lang, { signed: true })}
-                      </span>
-                      <ChevronRight className="text-muted size-5" aria-hidden />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          )}
+                        <HullSwatch hull={book.group.hull} className="h-5 w-10" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-bold">{book.group.name}</span>
+                          <span className="text-ink-soft text-sm">
+                            {format(t.groups.members, { count: book.group.members.length })}
+                          </span>
+                        </span>
+                        <span
+                          className={`figure text-xl ${balance < 0 ? "text-debt" : balance > 0 ? "text-credit" : "text-ink-soft"}`}
+                        >
+                          {rupiah(balance, lang, { signed: true })}
+                        </span>
+                        <ChevronRight className="text-muted size-5" aria-hidden />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Panel>
+            )}
+          </div>
         </div>
-        <PesutRiver
-          mood={total < 0 ? "worried" : total === 0 && books.length > 0 ? "happy" : "idle"}
-          opening={opening}
-        />
+        <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-7">
+          {views.map(({ book, view }) => (
+            <div key={book.group.id} className="order-3 lg:order-none">
+              <RoutesPanel
+                onlyMine
+                title={book.group.name}
+                groupId={book.group.id}
+                groupName={book.group.name}
+                me={user.id}
+                names={view.names}
+                routes={book.transfers}
+                accounts={view.accounts}
+                siteUrl={env.NEXT_PUBLIC_SITE_URL}
+              />
+            </div>
+          ))}
+          <div className="order-2 lg:order-none">
+            <PesutRiver
+              mood={total < 0 ? "worried" : total === 0 && books.length > 0 ? "happy" : "idle"}
+              opening={opening}
+            />
+          </div>
+        </div>
       </div>
     </>
   );

@@ -15,6 +15,7 @@ test("a new person creates a group, invites a friend, and the friend joins", asy
   await alice.getByRole("button", { name: "Buat grup" }).click();
   await expect(alice.getByRole("heading", { name: "Trip Derawan", exact: true })).toBeVisible();
 
+  await alice.getByRole("link", { name: "Anggota & undangan" }).click();
   await alice.getByRole("button", { name: "Buat link undangan" }).click();
   const invite = await alice.getByRole("textbox", { name: "Undang teman" }).inputValue();
   expect(invite).toMatch(/\/id\/join\/[0-9a-f]{64}$/);
@@ -30,6 +31,8 @@ test("a new person creates a group, invites a friend, and the friend joins", asy
   await expect(bob.getByRole("heading", { name: "Trip Derawan", exact: true })).toBeVisible();
   await expect(bob.getByText("2 anggota").first()).toBeVisible();
   // Plain members don't get to hand out invites.
+  await bob.getByRole("link", { name: "Anggota & undangan" }).click();
+  await expect(bob.getByRole("heading", { name: "Anggota & undangan" })).toBeVisible();
   await expect(bob.getByRole("button", { name: "Buat link undangan" })).toHaveCount(0);
 });
 

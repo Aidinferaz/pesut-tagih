@@ -2,7 +2,7 @@
  * Pesut, built voxel by voxel from code.
  *
  * An Irrawaddy dolphin (pesut Mahakam): slate grey-blue back, pale belly, a
- * round melon of a head with no beak, a small rounded dorsal fin, and a cape
+ * round melon of a head with no beak, and a cape
  * in the brand's life-ring orange with the hull's yellow-and-red hem.
  *
  * Units are voxels. The body runs along x (tail at -x, head at +x), y is up and
@@ -56,14 +56,6 @@ function insideBody(x: number, y: number, z: number): boolean {
   return (y / ry) ** 2 + (z / rz) ** 2 <= 1;
 }
 
-/** Small rounded dorsal fin, swept back: [x, height above the back]. */
-const DORSAL_FIN = new Map<number, number>([
-  [-4, 1],
-  [-3, 2],
-  [-2, 2],
-  [-1, 1],
-]);
-
 /** The hull of the body only: interior voxels are culled because nobody sees them. */
 export function buildBody(): Voxel[] {
   const out: Voxel[] = [];
@@ -99,10 +91,6 @@ export function buildBody(): Voxel[] {
     }
   }
 
-  for (const [x, h] of DORSAL_FIN) {
-    const top = Math.round(bodyRadius(x));
-    for (let dy = 1; dy <= h; dy += 1) out.push({ x, y: top + dy, z: 0, color: COLORS.back });
-  }
   return dedupe(out);
 }
 
@@ -166,23 +154,24 @@ export function buildFluke(): Voxel[] {
  * kept alongside the voxel.
  */
 export type CapeCell = Voxel & { u: number; v: number };
-export const CAPE_LENGTH = 10;
+export const CAPE_LENGTH = 12;
 
 export function buildCape(): CapeCell[] {
   const out: CapeCell[] = [];
-  const neck = 3;
-  // Tied at the neck just above the back, then streaming out behind almost
-  // level, so it lifts clear of the tapering body like a cape in the wind.
-  const neckY = Math.round(backHeight(neck, 0)) + 1;
+  const neck = 0;
+  // A one-voxel sheet tied behind the head, lying on the back and trailing
+  // past the tail like a cape in the current. It never rises above the back,
+  // so it reads as a cape, not a hat.
   for (let u = 0; u < CAPE_LENGTH; u += 1) {
     const x = neck - u;
-    const half = Math.min(2 + Math.ceil(u / 2), 6);
-    const fin = DORSAL_FIN.get(x) ?? 0;
-    const rest = Math.max(neckY - Math.round(u * 0.35), Math.round(backHeight(x, 0)) + fin + 1);
-    // Over the body the sides fall away with the round of the back.
-    const shoulder = Math.floor(bodyRadius(x) * WIDTH_RATIO * 0.55);
+    const half = Math.min(3 + Math.floor(u / 3), 5);
+    const rz = bodyRadius(x) * WIDTH_RATIO;
     for (let v = -half; v <= half; v += 1) {
-      const y = rest - Math.max(0, Math.abs(v) - shoulder);
+      const onBack = Math.abs(v) < rz - 0.5;
+      // Over the body it follows the round of the back; past the edge it hangs down the flank.
+      const y = onBack
+        ? Math.round(backHeight(x, v)) + 1
+        : Math.max(0, Math.round(bodyRadius(x) * 0.15)) - (Math.abs(v) - Math.ceil(rz)) + 1;
       const color =
         u === CAPE_LENGTH - 1
           ? COLORS.hemLine
@@ -195,9 +184,9 @@ export function buildCape(): CapeCell[] {
     }
   }
   // Clasp at the throat, both sides.
-  const clasp = Math.round(bodyRadius(neck) * WIDTH_RATIO * 0.7);
-  out.push({ x: neck + 1, y: neckY - 1, z: clasp, color: COLORS.clasp, u: 0, v: clasp });
-  out.push({ x: neck + 1, y: neckY - 1, z: -clasp, color: COLORS.clasp, u: 0, v: -clasp });
+  const clasp = Math.round(bodyRadius(neck + 1) * WIDTH_RATIO);
+  out.push({ x: neck + 1, y: 1, z: clasp, color: COLORS.clasp, u: 0, v: clasp });
+  out.push({ x: neck + 1, y: 1, z: -clasp, color: COLORS.clasp, u: 0, v: -clasp });
   return out;
 }
 

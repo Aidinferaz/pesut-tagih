@@ -1,5 +1,7 @@
-import { ChevronDown, Receipt, Trash2 } from "lucide-react";
+import { ChevronDown, Pencil, Receipt, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { Panel, PanelTitle } from "@/components/ui/Panel";
+import { Plate } from "@/components/ui/Plate";
 import type { Locale } from "@/i18n/config";
 import { intlLocale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries/id";
@@ -23,7 +25,8 @@ function shortDate(isoDate: string, locale: Locale) {
 
 /**
  * Proof that the book balances: what the group is owed and what it owes are
- * drawn as two bars of exactly the same length, split by person.
+ * two tracks of exactly the same length, split by person and labelled, so you
+ * can see who holds what.
  */
 function CloseBar({
   owed,
@@ -38,17 +41,25 @@ function CloseBar({
 }) {
   const total = owed.reduce((s, p) => s + p.amount, 0);
   if (total === 0) return null;
+  // Segments and their labels share flex-basis 0, so each label sits under its own segment.
   const row = (side: Side, tone: string[], text: string) => (
     <div>
       <p className="text-ink-soft mb-1 text-sm font-semibold">{text}</p>
-      <div className="border-line-strong flex h-4 overflow-hidden rounded-[4px] border-2">
+      <div className="border-line-strong flex h-5 overflow-hidden rounded-[4px] border-2">
         {side.map((p, i) => (
           <i
             key={p.name}
-            title={`${p.name} · ${rupiah(p.amount, locale)}`}
             className={`block h-full ${tone[i % tone.length]} ${i > 0 ? "border-line-strong border-l-2" : ""}`}
-            style={{ flexGrow: p.amount }}
+            style={{ flex: `${p.amount} 1 0` }}
           />
+        ))}
+      </div>
+      <div className="mt-1 flex text-xs">
+        {side.map((p) => (
+          <span key={p.name} className="min-w-0 truncate pr-2" style={{ flex: `${p.amount} 1 0` }}>
+            <span className="font-bold">{p.name}</span>{" "}
+            <span className="text-ink-soft tabular-nums">{rupiah(p.amount, locale)}</span>
+          </span>
         ))}
       </div>
     </div>
@@ -141,8 +152,8 @@ export function GroupLedger({
                 key={row.settlement.id}
                 className="border-line grid grid-cols-[4.75rem_minmax(0,1fr)_auto] items-baseline gap-3 border-b py-3 text-[0.9375rem]"
               >
-                <span className="text-muted font-semibold tabular-nums">
-                  {plateNumber("PT", row.settlement.number)}
+                <span>
+                  <Plate size="sm">{plateNumber("PT", row.settlement.number)}</Plate>
                 </span>
                 <span className="min-w-0">
                   <span className="font-semibold">
@@ -205,15 +216,15 @@ function ExpenseRow({
   return (
     <li className="border-line border-b">
       <details className="group">
-        <summary className="grid cursor-pointer list-none grid-cols-[4.75rem_minmax(0,1fr)_auto_auto] items-baseline gap-3 py-3 text-[0.9375rem] [&::-webkit-details-marker]:hidden">
-          <span className="text-muted font-semibold tabular-nums">
-            {plateNumber("PT", e.number)}
+        <summary className="grid cursor-pointer list-none grid-cols-[4.75rem_minmax(0,1fr)_auto_auto] items-start gap-3 py-3 text-[0.9375rem] [&::-webkit-details-marker]:hidden">
+          <span>
+            <Plate size="sm">{plateNumber("PT", e.number)}</Plate>
           </span>
           <span className="min-w-0">
-            <span className="font-semibold">{e.title}</span>
-            <span className="text-ink-soft">
-              {" · "}
-              {names[e.paidBy]} · {shortDate(e.occurredOn, locale)}
+            <span className="block font-semibold">{e.title}</span>
+            <span className="text-ink-soft block text-sm">
+              {names[e.paidBy]} ·{" "}
+              <span className="whitespace-nowrap">{shortDate(e.occurredOn, locale)}</span>
               {e.recurring && ` · ${t.ledger.recurring}`}
             </span>
           </span>
@@ -284,6 +295,15 @@ function ExpenseRow({
                   <Receipt className="size-4" aria-hidden />
                   {t.ledger.receipt}
                 </a>
+              )}
+              {canDelete && (
+                <Link
+                  href={`/${locale}/groups/${groupId}/expenses/${e.id}/edit`}
+                  className="inline-flex items-center gap-1 font-bold underline"
+                >
+                  <Pencil className="size-4" aria-hidden />
+                  {t.ledger.edit}
+                </Link>
               )}
               {canDelete && (
                 <form action={deleteExpense}>

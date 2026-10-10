@@ -1,8 +1,9 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useActionState, useEffect, useId, useRef } from "react";
 import { Field, FormMessage, inputClass, TextInput } from "@/components/forms/fields";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClass } from "@/components/ui/Button";
 import { Panel, PanelTitle } from "@/components/ui/Panel";
 import { intlLocale } from "@/i18n/config";
 import { format } from "@/i18n/format";
@@ -92,78 +93,89 @@ export function RecurringPanel({
         </ul>
       )}
 
-      <form ref={form} action={action} className="mt-5 grid gap-4">
-        <input type="hidden" name="lang" value={locale} />
-        <input type="hidden" name="groupId" value={groupId} />
-        <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,7rem)]">
-          <Field id={`${ids}-name`} label={t.recurring.name}>
-            <TextInput
-              id={`${ids}-name`}
-              name="title"
-              required
-              maxLength={80}
-              placeholder="Netflix"
-            />
-          </Field>
-          <Field id={`${ids}-amount`} label={t.recurring.amount}>
-            <TextInput
-              id={`${ids}-amount`}
-              name="amount"
-              required
-              inputMode="decimal"
-              placeholder="186rb"
-            />
-          </Field>
-          <Field id={`${ids}-day`} label={t.recurring.day}>
-            <TextInput
-              id={`${ids}-day`}
-              name="day"
-              type="number"
-              min={1}
-              max={28}
-              defaultValue={1}
-              required
-            />
-          </Field>
-        </div>
-        <Field id={`${ids}-payer`} label={t.recurring.payer}>
-          <select id={`${ids}-payer`} name="paidBy" defaultValue={me} className={inputClass}>
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <fieldset>
-          <legend className="mb-2 text-sm font-bold">{t.recurring.who}</legend>
-          <div className="flex flex-wrap gap-2">
-            {members.map((m) => (
-              <label
-                key={m.id}
-                className="border-line has-[:checked]:border-line-strong has-[:checked]:bg-plate has-[:checked]:text-plate-ink flex min-h-10 cursor-pointer items-center gap-2 rounded-full border-2 px-3.5 text-sm font-bold"
-              >
-                <input
-                  type="checkbox"
-                  name="participants"
-                  value={m.id}
-                  defaultChecked
-                  className="sr-only"
-                />
-                {m.name}
-              </label>
-            ))}
+      <details className="group mt-4" open={state.status === "error" || undefined}>
+        <summary
+          className={buttonClass(
+            "outline",
+            "w-fit cursor-pointer list-none [&::-webkit-details-marker]:hidden",
+          )}
+        >
+          <Plus className="size-4" aria-hidden />
+          {t.recurring.add}
+        </summary>
+        <form ref={form} action={action} className="mt-4 grid gap-4">
+          <input type="hidden" name="lang" value={locale} />
+          <input type="hidden" name="groupId" value={groupId} />
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,7rem)]">
+            <Field id={`${ids}-name`} label={t.recurring.name}>
+              <TextInput
+                id={`${ids}-name`}
+                name="title"
+                required
+                maxLength={80}
+                placeholder="Netflix"
+              />
+            </Field>
+            <Field id={`${ids}-amount`} label={t.recurring.amount}>
+              <TextInput
+                id={`${ids}-amount`}
+                name="amount"
+                required
+                inputMode="decimal"
+                placeholder="186rb"
+              />
+            </Field>
+            <Field id={`${ids}-day`} label={t.recurring.day}>
+              <TextInput
+                id={`${ids}-day`}
+                name="day"
+                type="number"
+                min={1}
+                max={28}
+                defaultValue={1}
+                required
+              />
+            </Field>
           </div>
-        </fieldset>
-        {state.status === "error" && (
-          <FormMessage tone="error">{t.errors[state.error]}</FormMessage>
-        )}
-        <div>
-          <Button type="submit" variant="outline" disabled={pending}>
-            {t.recurring.create}
-          </Button>
-        </div>
-      </form>
+          <Field id={`${ids}-payer`} label={t.recurring.payer}>
+            <select id={`${ids}-payer`} name="paidBy" defaultValue={me} className={inputClass}>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <fieldset>
+            <legend className="mb-2 text-sm font-bold">{t.recurring.who}</legend>
+            <div className="flex flex-wrap gap-2">
+              {members.map((m) => (
+                <label
+                  key={m.id}
+                  className="border-line has-[:checked]:border-line-strong has-[:checked]:bg-plate has-[:checked]:text-plate-ink flex min-h-10 cursor-pointer items-center gap-2 rounded-md border-2 px-3.5 text-sm font-bold"
+                >
+                  <input
+                    type="checkbox"
+                    name="participants"
+                    value={m.id}
+                    defaultChecked
+                    className="sr-only"
+                  />
+                  {m.name}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          {state.status === "error" && (
+            <FormMessage tone="error">{t.errors[state.error]}</FormMessage>
+          )}
+          <div>
+            <Button type="submit" variant="outline" disabled={pending}>
+              {t.recurring.create}
+            </Button>
+          </div>
+        </form>
+      </details>
     </Panel>
   );
 }

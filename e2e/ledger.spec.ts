@@ -18,6 +18,7 @@ test("log an expense, pay it back along the free route, and confirm it", async (
   await alice.getByRole("button", { name: "Buat grup" }).click();
   await expect(alice.getByRole("heading", { name: "Kos Lt.2", exact: true })).toBeVisible();
   const groupUrl = new URL(alice.url()).pathname;
+  await alice.getByRole("link", { name: "Anggota & undangan" }).click();
   await alice.getByRole("button", { name: "Buat link undangan" }).click();
   const invite = new URL(await alice.getByRole("textbox", { name: "Undang teman" }).inputValue())
     .pathname;
@@ -94,4 +95,33 @@ test("an itemised receipt spreads tax by what each person had", async ({ page })
   await expect(summary).toContainText("Rp22.000");
   await page.getByRole("button", { name: "Simpan urunan" }).click();
   await expect(page.getByText("PT-0001")).toBeVisible();
+});
+
+test("an expense can be corrected and keeps its number", async ({ page }) => {
+  await signIn(page, uniqueEmail("fixer"));
+  await page.goto("/id/groups/new");
+  await page.getByLabel("Nama grup").fill("Koreksi");
+  await page.getByRole("button", { name: "Buat grup" }).click();
+  await expect(page.getByRole("heading", { name: "Koreksi", exact: true })).toBeVisible();
+  const group = new URL(page.url()).pathname;
+  await page.goto(`${group}/expenses/new`);
+  await page.getByLabel("Total").fill("100rb");
+  await expect(page.getByText("= Rp100.000")).toBeVisible();
+  await page.getByLabel("Untuk apa?").fill("Martabak");
+  await page.getByRole("button", { name: "Simpan urunan" }).click();
+  await expect(page).toHaveURL(/logged=1/);
+
+  await page.getByText("Martabak").click();
+  await page.getByRole("link", { name: "Ubah" }).click();
+  // Visible fields only: Next keeps the earlier "new expense" page alive but hidden.
+  await expect(page.getByRole("textbox", { name: "Untuk apa?" })).toHaveValue("Martabak");
+  await page.getByRole("textbox", { name: "Total" }).fill("80rb");
+  await expect(page.getByText("= Rp80.000")).toBeVisible();
+  await page.getByRole("button", { name: "Simpan perubahan" }).click();
+  await expect(page).toHaveURL(new RegExp(`${group}$`));
+  // Same record, new total: the number survives the edit and there is still only one.
+  const row = page.getByRole("group").filter({ hasText: "Martabak" });
+  await expect(row).toContainText("PT-0001");
+  await expect(row).toContainText("Rp80.000");
+  await expect(page.getByRole("group").filter({ hasText: "PT-0002" })).toHaveCount(0);
 });

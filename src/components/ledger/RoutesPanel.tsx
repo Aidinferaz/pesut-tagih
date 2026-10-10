@@ -98,13 +98,13 @@ export function RoutesPanel({
         <p className="text-ink-soft mt-3">{t.routes.empty}</p>
       ) : (
         <ol className="mt-3">
-          {mine.map((r, index) => {
+          {mine.map((r) => {
             const outgoing = r.from === me;
             const isOpen = open === key(r);
             return (
               <li key={key(r)} className="border-line border-b-2 py-3.5 last:border-0">
                 <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2">
-                  <Plate>{`R${index + 1}`}</Plate>
+                  <Plate>{r.via ? r.via.toUpperCase() : "?"}</Plate>
                   <div className="min-w-0">
                     <p className="font-bold">
                       {outgoing ? t.routes.you : names[r.from]} →{" "}

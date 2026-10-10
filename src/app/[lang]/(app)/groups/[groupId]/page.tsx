@@ -1,13 +1,10 @@
-import { Plus } from "lucide-react";
+import { Plus, Settings2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { lang as rootLang } from "next/root-params";
 import { Suspense } from "react";
 import { z } from "zod";
-import { GroupSettingsPanel } from "@/components/groups/GroupSettingsPanel";
-import { InvitePanel } from "@/components/groups/InvitePanel";
-import { LeaveGroupButton } from "@/components/groups/LeaveGroupButton";
 import { PesutRiver } from "@/components/home/PesutRiver";
 import { BalancePanel } from "@/components/ledger/BalancePanel";
 import { GroupLedger } from "@/components/ledger/GroupLedger";
@@ -181,7 +178,7 @@ async function GroupContent({
               locale={lang}
             />
           </div>
-          <div className="order-3 lg:order-none">
+          <div className="order-4 lg:order-none">
             <RoutesPanel
               groupId={group.id}
               groupName={group.name}
@@ -192,7 +189,7 @@ async function GroupContent({
               accounts={accounts}
             />
           </div>
-          <div className="order-4 lg:order-none">
+          <div className="order-3 lg:order-none">
             <PesutRiver
               mood={mood}
               opening={query.logged ? t.pesut.loggedLine : opening}
@@ -226,19 +223,14 @@ async function GroupContent({
                   </li>
                 ))}
               </ul>
+              <Link
+                href={`/${lang}/groups/${group.id}/settings`}
+                className={buttonClass("outline", "mt-4")}
+              >
+                <Settings2 className="size-4" aria-hidden />
+                {t.groups.settingsTitle}
+              </Link>
             </Panel>
-            {isAdmin && <InvitePanel groupId={group.id} groupName={group.name} />}
-            {isAdmin && (
-              <GroupSettingsPanel
-                groupId={group.id}
-                simplify={group.simplifyDebts}
-                autoConfirmDays={group.autoConfirmDays}
-                recapAmounts={group.recapAmounts}
-                telegramLinked={group.telegramLinked}
-                bot={env.TELEGRAM_BOT_TOKEN ? (env.TELEGRAM_BOT_USERNAME ?? null) : null}
-              />
-            )}
-            <LeaveGroupButton groupId={group.id} />
           </div>
         </div>
       </div>
