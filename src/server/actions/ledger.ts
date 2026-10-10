@@ -33,6 +33,7 @@ const ExpenseInput = z
     paidBy: z.uuid(),
     occurredOn: z.iso.date().optional(),
     note: z.string().trim().max(280).optional(),
+    receiptPath: z.string().max(200).optional(),
     method: z.enum(["equal", "exact", "itemized"]),
     total: rupiahField.optional(),
     participants: z.array(z.uuid()).max(50).default([]),
@@ -119,11 +120,15 @@ export async function createExpense(_prev: FormState, formData: FormData): Promi
     discount_amount: input.discount,
     on_date: input.occurredOn,
     expense_note: input.note,
+    // The database refuses a receipt stored under another group's folder.
+    receipt: input.receiptPath,
   });
   if (error) return { status: "error", error: errorKeyFor(error.code) };
 
   const lang = langOf(formData);
   revalidatePath(`/${lang}`, "layout");
+  // From the chat the person stays in the conversation; from the form they go to the group.
+  if (formData.get("stay") === "1") return { status: "ok", data: undefined };
   redirect(`/${lang}/groups/${input.groupId}?logged=1`);
 }
 

@@ -5,7 +5,16 @@ export type FormState<T = undefined> =
   | { status: "error"; error: ErrorKey; field?: string };
 
 export type ErrorKey =
-  "invalid" | "notSignedIn" | "forbidden" | "notFound" | "lastAdmin" | "tooLarge" | "unknown";
+  | "invalid"
+  | "notSignedIn"
+  | "forbidden"
+  | "notFound"
+  | "lastAdmin"
+  | "tooLarge"
+  | "aiDisabled"
+  | "quota"
+  | "unreadable"
+  | "unknown";
 
 /** Maps Postgres/PostgREST error codes raised by our policies and functions. */
 export function errorKeyFor(code: string | undefined): ErrorKey {

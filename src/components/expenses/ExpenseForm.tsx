@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
-import { useActionState, useId, useMemo, useState } from "react";
+import { useActionState, useCallback, useId, useMemo, useState } from "react";
 import { Field, FormMessage, inputClass, TextInput } from "@/components/forms/fields";
 import { Button } from "@/components/ui/Button";
 import { parseRupiah } from "@/domain/money";
@@ -18,6 +18,8 @@ import { useI18n } from "@/i18n/provider";
 import { rupiah } from "@/lib/format";
 import { createExpense, type ExpenseInput } from "@/server/actions/ledger";
 import type { FormState } from "@/server/actions/state";
+import type { ParsedExpense, ScannedReceipt } from "@/server/actions/ai";
+import { ExpenseHelpers } from "./ExpenseHelpers";
 
 type Member = { id: string; name: string };
 type Method = "equal" | "exact" | "itemized";
@@ -38,10 +40,12 @@ export function ExpenseForm({
   groupId,
   members,
   me,
+  aiEnabled,
 }: {
   groupId: string;
   members: Member[];
   me: string;
+  aiEnabled: boolean;
 }) {
   const { t, locale } = useI18n();
   const ids = useId();
@@ -59,6 +63,37 @@ export function ExpenseForm({
   const [exact, setExact] = useState<Record<string, string>>({});
   const [items, setItems] = useState<Item[]>([{ key: 0, name: "", amount: "", owners: [] }]);
   const [extras, setExtras] = useState({ tax: "", service: "", discount: "" });
+  const [receiptPath, setReceiptPath] = useState<string | undefined>();
+
+  // Pesut's helpers fill the same fields a person would.
+  const fromReceipt = useCallback((r: ScannedReceipt) => {
+    setMethod("itemized");
+    setItems(
+      r.items.map((item, key) => ({
+        key,
+        name: item.name,
+        amount: String(item.amount),
+        owners: [],
+      })),
+    );
+    setExtras({
+      tax: r.tax ? String(r.tax) : "",
+      service: r.service ? String(r.service) : "",
+      discount: r.discount ? String(r.discount) : "",
+    });
+    setReceiptPath(r.receiptPath);
+    setTitle((current) => current || r.merchant || "");
+  }, []);
+  const fromText = useCallback(
+    (p: ParsedExpense) => {
+      setTitle(p.title);
+      setTotal(String(p.total));
+      setPaidBy(p.paidBy ?? me);
+      setMethod("equal");
+      setParticipants(p.participants.length ? p.participants : members.map((m) => m.id));
+    },
+    [me, members],
+  );
 
   const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? "";
   const parsedTotal = amountOf(total);
@@ -98,6 +133,7 @@ export function ExpenseForm({
     title: title.trim(),
     paidBy,
     occurredOn: date || undefined,
+    receiptPath,
     note: note.trim() || undefined,
     method,
     ...(method === "itemized"
@@ -132,6 +168,9 @@ export function ExpenseForm({
     <form action={action} className="grid gap-6">
       <input type="hidden" name="lang" value={locale} />
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
+      {aiEnabled && (
+        <ExpenseHelpers groupId={groupId} onReceipt={fromReceipt} onParsed={fromText} />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Field id={`${ids}-title`} label={t.expenseForm.whatFor}>

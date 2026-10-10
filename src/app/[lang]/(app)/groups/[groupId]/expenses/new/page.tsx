@@ -11,6 +11,7 @@ import type { Dictionary } from "@/i18n/dictionaries/id";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { requireUser } from "@/server/auth";
 import { getGroup } from "@/server/db/groups";
+import { aiEnabled } from "@/server/ai/model";
 
 type Params = PageProps<"/[lang]/groups/[groupId]/expenses/new">;
 
@@ -59,6 +60,7 @@ async function Content({
       </h1>
       <Panel>
         <ExpenseForm
+          aiEnabled={aiEnabled()}
           groupId={group.id}
           me={user.id}
           members={group.members.map((m) => ({ id: m.id, name: m.name }))}
