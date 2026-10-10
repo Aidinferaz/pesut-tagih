@@ -11,6 +11,8 @@ export default defineConfig({
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
+  // The dev server compiles each route on first visit, which is slow on CI runners.
+  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",

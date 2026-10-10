@@ -13,7 +13,7 @@ test("a new person creates a group, invites a friend, and the friend joins", asy
   await alice.getByLabel("Nama grup").fill("Trip Derawan");
   await alice.getByText("Oranye pelampung").click();
   await alice.getByRole("button", { name: "Buat grup" }).click();
-  await expect(alice.getByRole("heading", { name: "Trip Derawan" })).toBeVisible();
+  await expect(alice.getByRole("heading", { name: "Trip Derawan", exact: true })).toBeVisible();
 
   await alice.getByRole("button", { name: "Buat link undangan" }).click();
   const invite = await alice.getByRole("textbox", { name: "Undang teman" }).inputValue();
@@ -26,7 +26,8 @@ test("a new person creates a group, invites a friend, and the friend joins", asy
   await signIn(bob, uniqueEmail("bob"), "id", path);
   await expect(bob.getByRole("heading", { name: "Undangan ke Trip Derawan" })).toBeVisible();
   await bob.getByRole("button", { name: "Gabung grup" }).click();
-  await expect(bob.getByRole("heading", { name: "Trip Derawan" })).toBeVisible();
+  await expect(bob).toHaveURL(/\/id\/groups\/[0-9a-f-]{36}$/);
+  await expect(bob.getByRole("heading", { name: "Trip Derawan", exact: true })).toBeVisible();
   await expect(bob.getByText("2 anggota").first()).toBeVisible();
   // Plain members don't get to hand out invites.
   await expect(bob.getByRole("button", { name: "Buat link undangan" })).toHaveCount(0);
