@@ -42,6 +42,12 @@ test("log an expense, pay it back along the free route, and confirm it", async (
   await expect(alice.getByText("PT-0001")).toBeVisible();
   await expect(alice.getByText("+Rp50.000").first()).toBeVisible();
 
+  // Bob's home and transfers page both know he owes Alice.
+  await bob.goto("/id/home");
+  await expect(bob.getByText("−Rp50.000").first()).toBeVisible();
+  await bob.goto("/id/transfers");
+  await expect(bob.getByRole("heading", { name: "Kos Lt.2" })).toBeVisible();
+
   // Bob sees the route to Alice on the shared bank, and marks it paid.
   await bob.goto(groupUrl);
   await expect(bob.getByText("−Rp50.000").first()).toBeVisible();
@@ -61,6 +67,11 @@ test("log an expense, pay it back along the free route, and confirm it", async (
   await expect(alice.getByText(/bilang sudah transfer/)).toHaveCount(0);
   await expect(alice.getByText("Rp0").first()).toBeVisible();
   await expectNoSidewaysScroll(alice);
+
+  // The activity log tells the whole story.
+  await alice.goto("/id/activity");
+  await expect(alice.getByText(/mencatat Nasi kuning sebesar Rp100\.000/)).toBeVisible();
+  await expect(alice.getByText(/menerima Rp50\.000 dari/)).toBeVisible();
 });
 
 test("an itemised receipt spreads tax by what each person had", async ({ page }) => {

@@ -84,6 +84,7 @@ export const en: Dictionary = {
   },
   home: {
     subtitle: "{group} · {count} members",
+    waiting: "{count} transfers are waiting for your confirmation",
   },
   balance: {
     title: "Your net balance",
@@ -157,6 +158,7 @@ export const en: Dictionary = {
     ],
     idleOwe: "Your {amount} for {name} has been swimming alone for {days} days. Poor thing.",
     idleEven: "Everything's settled. I'm now an unemployed caped dolphin.",
+    homeOwe: "You still owe {name} {amount}. I know. I always know.",
     idleOwed: "{count} people still owe you {amount}. Say the word and I'll hose them down.",
     sceneLabel: "Pesut, the caped voxel mascot. Click to poke.",
     paidLine: "Whoa, fast for once. {name} just has to confirm, don't run off yet.",
@@ -166,6 +168,30 @@ export const en: Dictionary = {
     confirmLine: "Settled. One less drama in the world.",
     rejectLine: "They say it never arrived. Hmm, suspicious.",
     chaseAllLine: "Everyone who's late just got sprayed. You're welcome.",
+  },
+  activity: {
+    title: "Activity",
+    body: "Everything that happens in your groups, recorded for good. Nobody can edit or erase this history.",
+    empty: "No activity yet.",
+    someone: "Someone",
+    actions: {
+      "expense.created": "{actor} logged {title} for {amount}",
+      "expense.updated": "{actor} changed {title}",
+      "expense.deleted": "{actor} deleted {title} ({amount})",
+      "settlement.pending": "{from} marked {amount} as sent to {to}",
+      "settlement.confirmed": "{to} received {amount} from {from}",
+      "settlement.confirmedAuto":
+        "{amount} from {from} to {to} was counted as received automatically",
+      "settlement.rejected": "{amount} from {from} to {to} was rejected",
+      "member.joined": "{actor} joined",
+      "member.left": "{actor} left the group",
+      "member.role": "{actor} changed a member's role",
+    },
+  },
+  transfers: {
+    title: "Transfers",
+    body: "Everything you need to send and receive, across all your groups.",
+    empty: "No transfers waiting. Your hull floats level in every group.",
   },
   errors: {
     invalid: "Something in the form isn't right yet. Take another look.",
@@ -209,6 +235,7 @@ export const en: Dictionary = {
     leave: "Leave group",
     leaveConfirm: "Leave this group? Your expense records stay in it.",
     ledgerSoon: "This group's ledger appears here once the first expense is logged.",
+    totalBalance: "Net balance across groups",
     yourBalance: "Your balance in this group",
     settingsTitle: "Members & invites",
   },

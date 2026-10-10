@@ -88,6 +88,7 @@ export const id = {
   },
   home: {
     subtitle: "{group} · {count} anggota",
+    waiting: "{count} transfer menunggu kamu konfirmasi",
   },
   balance: {
     title: "Saldo bersih kamu",
@@ -161,6 +162,7 @@ export const id = {
     ],
     idleOwe: "{amount}-mu ke {name} sudah {days} hari berenang sendirian. Kasihan dia.",
     idleEven: "Semua lunas. Aku jadi pengangguran berjubah.",
+    homeOwe: "Kamu masih punya {amount} ke {name}. Aku tahu. Aku selalu tahu.",
     idleOwed: "{count} orang masih berutang {amount} ke kamu. Tinggal bilang, nanti kusemprot.",
     sceneLabel: "Pesut, maskot voxel berjubah. Klik untuk mencolek.",
     paidLine: "Wih, tumben cepat. {name} tinggal konfirmasi, jangan kabur dulu.",
@@ -170,6 +172,29 @@ export const id = {
     confirmLine: "Lunas. Satu drama berkurang di dunia ini.",
     rejectLine: "Katanya belum masuk. Hmm, mencurigakan.",
     chaseAllLine: "Semua yang telat sudah kusemprot. Sama-sama.",
+  },
+  activity: {
+    title: "Aktivitas",
+    body: "Semua yang terjadi di grup-grupmu, tercatat permanen. Tidak ada yang bisa mengubah atau menghapus riwayat ini.",
+    empty: "Belum ada aktivitas.",
+    someone: "Seseorang",
+    actions: {
+      "expense.created": "{actor} mencatat {title} sebesar {amount}",
+      "expense.updated": "{actor} mengubah {title}",
+      "expense.deleted": "{actor} menghapus {title} ({amount})",
+      "settlement.pending": "{from} menandai sudah transfer {amount} ke {to}",
+      "settlement.confirmed": "{to} menerima {amount} dari {from}",
+      "settlement.confirmedAuto": "Transfer {amount} dari {from} ke {to} otomatis dianggap masuk",
+      "settlement.rejected": "Transfer {amount} dari {from} ke {to} ditolak",
+      "member.joined": "{actor} bergabung",
+      "member.left": "{actor} keluar dari grup",
+      "member.role": "{actor} mengubah peran anggota",
+    },
+  },
+  transfers: {
+    title: "Transfer",
+    body: "Semua yang perlu kamu kirim dan terima, dari semua grup.",
+    empty: "Tidak ada transfer yang menunggu. Lambungmu mengapung rata di semua grup.",
   },
   errors: {
     invalid: "Isiannya belum benar. Cek lagi ya.",
@@ -213,6 +238,7 @@ export const id = {
     leave: "Keluar dari grup",
     leaveConfirm: "Yakin keluar? Catatan urunanmu tetap tersimpan di grup.",
     ledgerSoon: "Buku besar grup ini muncul di sini setelah urunan pertama dicatat.",
+    totalBalance: "Saldo bersih semua grup",
     yourBalance: "Saldo kamu di grup ini",
     settingsTitle: "Anggota & undangan",
   },

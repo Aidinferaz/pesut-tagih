@@ -38,17 +38,30 @@ type Props = {
   routes: Route[];
   accounts: Account[];
   siteUrl: string;
+  /** Hide routes between other members (the transfers page shows only yours). */
+  onlyMine?: boolean;
+  title?: string;
 };
 
 /**
  * The settlement plan as bow plates. Your own transfers come first and can be
  * acted on right here; the rest of the group's routes follow, quieter.
  */
-export function RoutesPanel({ groupId, groupName, me, names, routes, accounts, siteUrl }: Props) {
+export function RoutesPanel({
+  groupId,
+  groupName,
+  me,
+  names,
+  routes,
+  accounts,
+  siteUrl,
+  onlyMine = false,
+  title,
+}: Props) {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState<string | null>(null);
   const mine = routes.filter((r) => r.from === me || r.to === me);
-  const others = routes.filter((r) => r.from !== me && r.to !== me);
+  const others = onlyMine ? [] : routes.filter((r) => r.from !== me && r.to !== me);
   const key = (r: Route) => `${r.from}>${r.to}`;
 
   const via = (r: Route) => {
@@ -79,9 +92,9 @@ export function RoutesPanel({ groupId, groupName, me, names, routes, accounts, s
   };
 
   return (
-    <Panel aria-labelledby="routes-title">
-      <PanelTitle id="routes-title">{t.routes.title}</PanelTitle>
-      {routes.length === 0 ? (
+    <Panel aria-labelledby={`routes-${groupId}`}>
+      <PanelTitle id={`routes-${groupId}`}>{title ?? t.routes.title}</PanelTitle>
+      {mine.length + others.length === 0 ? (
         <p className="text-ink-soft mt-3">{t.routes.empty}</p>
       ) : (
         <ol className="mt-3">

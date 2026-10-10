@@ -11,6 +11,8 @@ import { PesutOnSubmit } from "./PesutOnSubmit";
 
 /** Transfers someone has marked as sent but the receiver hasn't confirmed yet. */
 export function PendingPanel({
+  groupId,
+  title,
   pending,
   me,
   names,
@@ -19,6 +21,9 @@ export function PendingPanel({
   t,
   locale,
 }: {
+  groupId: string;
+  /** Defaults to the generic heading; the transfers page names the group. */
+  title?: string;
   pending: LedgerSettlement[];
   me: string;
   names: Record<string, string>;
@@ -31,8 +36,8 @@ export function PendingPanel({
   if (relevant.length === 0) return null;
 
   return (
-    <Panel aria-labelledby="pending-title" className="border-band">
-      <PanelTitle id="pending-title">{t.pending.title}</PanelTitle>
+    <Panel aria-labelledby={`pending-${groupId}`} className="border-band">
+      <PanelTitle id={`pending-${groupId}`}>{title ?? t.pending.title}</PanelTitle>
       <ul className="mt-3">
         {relevant.map((s) => {
           const incoming = s.to === me;

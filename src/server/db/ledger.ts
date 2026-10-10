@@ -3,7 +3,7 @@ import { groupPosition, type SettlementStatus } from "@/domain/ledger";
 import type { ProviderCode } from "@/domain/providers";
 import type { Share } from "@/domain/split";
 import { supabaseForUser } from "@/server/supabase/server";
-import { getGroup, type GroupDetail } from "./groups";
+import { getGroup, listMyGroups, type GroupDetail } from "./groups";
 import { listPaymentMethods, type PaymentMethod } from "./profile";
 
 export type LedgerItem = {
@@ -172,4 +172,50 @@ export async function listRecurringBills(groupId: string) {
     nextRunOn: b.next_run_on,
     active: b.active,
   }));
+}
+
+/**
+ * The derived pieces every view of a group needs for one person: names,
+ * their routes, pending confirmations, and signed links to proofs and QRIS.
+ */
+export async function viewForMember(book: GroupBook, me: string) {
+  const names = Object.fromEntries(book.group.members.map((m) => [m.id, m.name]));
+  const pending = book.settlements.filter((s) => s.status === "pending");
+  const outgoing = book.transfers.filter((r) => r.from === me);
+  const incoming = book.transfers.filter((r) => r.to === me);
+  const [proofUrls, qrisUrls] = await Promise.all([
+    signedUrls(
+      "proofs",
+      pending.flatMap((s) => (s.proofPath ? [s.proofPath] : [])),
+    ),
+    signedUrls(
+      "qris",
+      book.methods
+        .filter((m) => m.qrisPath && outgoing.some((r) => r.to === m.userId))
+        .map((m) => m.qrisPath!),
+    ),
+  ]);
+  const accounts = book.methods.map((m) => ({
+    userId: m.userId,
+    provider: m.provider,
+    accountNumber: m.accountNumber,
+    accountName: m.accountName,
+    qrisUrl: m.qrisPath ? (qrisUrls.get(m.qrisPath) ?? null) : null,
+  }));
+  return {
+    names,
+    pending,
+    outgoing,
+    incoming,
+    proofUrls,
+    accounts,
+    balance: book.balances.get(me) ?? 0,
+  };
+}
+
+/** Books for every group the person is in, oldest membership first. */
+export async function listMyBooks(userId: string) {
+  const groups = await listMyGroups(userId);
+  const books = await Promise.all(groups.map((g) => getGroupBook(g.id)));
+  return books.filter((b): b is GroupBook => b !== null);
 }

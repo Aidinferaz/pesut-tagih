@@ -23,7 +23,13 @@ import { getDictionary } from "@/i18n/get-dictionary";
 import { rupiah } from "@/lib/format";
 import { requireUser } from "@/server/auth";
 import { requestNow } from "@/server/clock";
-import { getGroupBook, listRecurringBills, signedUrls, type GroupBook } from "@/server/db/ledger";
+import {
+  getGroupBook,
+  listRecurringBills,
+  signedUrls,
+  viewForMember,
+  type GroupBook,
+} from "@/server/db/ledger";
 import { env } from "@/server/env";
 
 type Params = PageProps<"/[lang]/groups/[groupId]">;
@@ -91,32 +97,23 @@ async function GroupContent({
   ]);
   if (!book) notFound();
 
-  const { group, balances, transfers, settlements, expenses, methods } = book;
+  const { group, balances, transfers, settlements, expenses } = book;
   const me = user.id;
-  const names = Object.fromEntries(group.members.map((m) => [m.id, m.name]));
+  const {
+    names,
+    pending,
+    outgoing,
+    incoming,
+    proofUrls,
+    accounts,
+    balance: mine,
+  } = await viewForMember(book, me);
   const isAdmin = group.members.some((m) => m.id === me && m.role === "admin");
-  const pending = settlements.filter((s) => s.status === "pending");
-  const mine = balances.get(me) ?? 0;
   const scale = Math.max(1, ...[...balances.values()].map(Math.abs));
-  const outgoing = transfers.filter((r) => r.from === me);
-  const incoming = transfers.filter((r) => r.to === me);
-
-  const [proofUrls, receiptUrls, qrisUrls] = await Promise.all([
-    signedUrls(
-      "proofs",
-      pending.flatMap((s) => (s.proofPath ? [s.proofPath] : [])),
-    ),
-    signedUrls(
-      "receipts",
-      expenses.flatMap((e) => (e.receiptPath ? [e.receiptPath] : [])),
-    ),
-    signedUrls(
-      "qris",
-      methods
-        .filter((m) => outgoing.some((r) => r.to === m.userId) && m.qrisPath)
-        .map((m) => m.qrisPath!),
-    ),
-  ]);
+  const receiptUrls = await signedUrls(
+    "receipts",
+    expenses.flatMap((e) => (e.receiptPath ? [e.receiptPath] : [])),
+  );
 
   const days = daysOwing(book, me, await requestNow());
   const biggest = outgoing.toSorted((a, b) => b.amount - a.amount)[0];
@@ -191,6 +188,7 @@ async function GroupContent({
         <div className="contents lg:flex lg:flex-col lg:gap-7">
           <div className="order-2 empty:hidden lg:order-none">
             <PendingPanel
+              groupId={group.id}
               pending={pending}
               me={me}
               names={names}
@@ -208,13 +206,7 @@ async function GroupContent({
               names={names}
               routes={transfers}
               siteUrl={env.NEXT_PUBLIC_SITE_URL}
-              accounts={methods.map((m) => ({
-                userId: m.userId,
-                provider: m.provider,
-                accountNumber: m.accountNumber,
-                accountName: m.accountName,
-                qrisUrl: m.qrisPath ? (qrisUrls.get(m.qrisPath) ?? null) : null,
-              }))}
+              accounts={accounts}
             />
           </div>
           <div className="order-4 lg:order-none">
