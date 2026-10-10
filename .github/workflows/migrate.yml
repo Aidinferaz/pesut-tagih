@@ -2,7 +2,10 @@ name: Migrate production database
 
 # Applies new migrations in supabase/migrations to the production project.
 # Runs after CI passes on main, behind the "production" environment so a
-# reviewer can be required (Settings → Environments → production).
+# reviewer has to approve (Settings → Environments → production).
+#
+# It connects with the database's session-pooler connection string only, so
+# no Supabase Management API token is stored anywhere.
 on:
   workflow_run:
     workflows: [CI]
@@ -22,9 +25,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment: production
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -32,10 +32,11 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.120.0
-      - name: Skip until the production project is configured
+      - name: Skip until the production database is configured
         id: configured
-        run: echo "ready=${{ secrets.SUPABASE_PROJECT_REF != '' }}" >> "$GITHUB_OUTPUT"
-      - if: steps.configured.outputs.ready == 'true'
-        run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
-      - if: steps.configured.outputs.ready == 'true'
-        run: supabase db push
+        run: echo "ready=${{ secrets.SUPABASE_DB_URL != '' }}" >> "$GITHUB_OUTPUT"
+      - name: Apply migrations
+        if: steps.configured.outputs.ready == 'true'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase db push --db-url "$SUPABASE_DB_URL"

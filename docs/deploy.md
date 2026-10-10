@@ -97,14 +97,17 @@ Tanpa Fonnte, Pesut tetap menyiapkan tombol "Kirim via WA" berisi pesan tagihan.
 
 ## 8. GitHub Actions untuk migrasi database
 
-Di repo GitHub, **Settings → Secrets and variables → Actions**, tambahkan:
+Workflow migrasi hanya memakai connection string database, tanpa token Management API.
 
-- `SUPABASE_PROJECT_REF`
-- `SUPABASE_DB_PASSWORD`
-- `SUPABASE_ACCESS_TOKEN` (dari [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens))
+1. Di Supabase, tekan **Connect** (atas halaman project) → tab **Connection String** → pilih
+   **Session pooler** (bukan _Direct connection_: runner GitHub tidak punya IPv6).
+2. Salin URI-nya dan ganti `[YOUR-PASSWORD]` dengan database password.
+3. Di GitHub, **Settings → Secrets and variables → Actions**, tambahkan secret `SUPABASE_DB_URL`
+   berisi URI tersebut.
+4. **Settings → Environments → production**: aktifkan **Required reviewers** dan tambahkan dirimu.
 
-Lalu di **Settings → Environments → production**, tambahkan dirimu sebagai _required reviewer_.
-Setiap migrasi baru di `main` akan diterapkan setelah CI lulus dan kamu menyetujuinya.
+Setiap migrasi baru di `main` akan diterapkan setelah CI lulus dan kamu menyetujuinya
+(Actions → run "Migrate production database" → **Review deployments** → **Approve and deploy**).
 
 ## Cek setelah deploy
 
