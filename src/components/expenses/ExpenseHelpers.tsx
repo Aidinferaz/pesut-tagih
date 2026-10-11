@@ -112,14 +112,15 @@ export function ExpenseHelpers({
       <label htmlFor={`${ids}-quick`} className="text-sm font-bold">
         {t.expenseForm.quick}
       </label>
-      <div className="flex gap-2">
+      {/* The button drops under the box on phones so the example text stays readable. */}
+      <div className="flex flex-wrap gap-2">
         <input
           id={`${ids}-quick`}
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={500}
           placeholder={t.expenseForm.quickPlaceholder}
-          className={`${inputClass} min-w-0 flex-1`}
+          className={`${inputClass} min-w-0 flex-1 basis-56`}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();

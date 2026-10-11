@@ -43,7 +43,7 @@ function CloseBar({
   if (total === 0) return null;
   // Segments and their labels share flex-basis 0, so each label sits under its own segment.
   const row = (side: Side, tone: string[], text: string) => (
-    <div>
+    <div className="min-w-0">
       <p className="text-ink-soft mb-1 text-sm font-semibold">{text}</p>
       <div className="border-line-strong flex h-5 overflow-hidden rounded-[4px] border-2">
         {side.map((p, i) => (
@@ -65,7 +65,7 @@ function CloseBar({
     </div>
   );
   return (
-    <div className="mt-4 grid gap-3">
+    <div className="mt-4 grid grid-cols-1 gap-3">
       {row(
         owed,
         ["bg-credit", "bg-credit/65", "bg-credit/35"],

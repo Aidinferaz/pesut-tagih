@@ -71,20 +71,28 @@ export function RecurringPanel({
         <ul className="border-line mt-3 border-t-2">
           {bills.map((b) => (
             <li key={b.id} className="border-line border-b-2 py-3">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold">
-                    {b.title} · {rupiah(b.amount, locale)}
+              {/* Details on top, actions on their own row on phones; side by side from sm up. */}
+              <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+                <div className="min-w-0">
+                  <p className="flex items-baseline justify-between gap-3 font-bold">
+                    <span className="min-w-0 break-words">{b.title}</span>
+                    <span className="whitespace-nowrap tabular-nums">
+                      {rupiah(b.amount, locale)}
+                    </span>
                   </p>
                   <p className="text-ink-soft text-sm">
-                    {nameOf(b.paidBy)} → {b.participants.map(nameOf).join(", ")} ·{" "}
+                    {nameOf(b.paidBy)} → {b.participants.map(nameOf).join(", ")}
+                  </p>
+                  <p
+                    className={`text-sm font-semibold ${b.active ? "text-ink-soft" : "text-debt"}`}
+                  >
                     {b.active
                       ? format(t.recurring.next, { date: date(b.nextRunOn) })
                       : t.recurring.paused}
                   </p>
                 </div>
                 {canChange(b) && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="-ml-3 flex flex-wrap gap-1 sm:ml-0">
                     <Button
                       variant="ghost"
                       className="text-sm"

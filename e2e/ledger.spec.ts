@@ -145,11 +145,15 @@ test("a monthly bill bills this month at once and can be edited and deleted", as
   await page.getByRole("button", { name: "Ubah" }).first().click();
   await page.getByRole("textbox", { name: "Jumlah per bulan" }).first().fill("350rb");
   await page.getByRole("button", { name: "Simpan perubahan" }).click();
-  await expect(page.getByText("WiFi · Rp350.000")).toBeVisible();
+  const bill = page
+    .getByRole("listitem")
+    .filter({ hasText: "WiFi" })
+    .filter({ hasText: "Rp350.000" });
+  await expect(bill).toBeVisible();
   await expect(page.getByRole("group").filter({ hasText: "WiFi" })).toContainText("Rp300.000");
 
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Hapus" }).first().click();
-  await expect(page.getByText("WiFi · Rp350.000")).toHaveCount(0);
+  await expect(bill).toHaveCount(0);
   await expect(page.getByText("Belum ada tagihan bulanan.")).toBeVisible();
 });

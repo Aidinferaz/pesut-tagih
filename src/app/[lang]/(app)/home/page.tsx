@@ -144,7 +144,14 @@ async function HomeContent({ lang, t }: { lang: Locale; t: Dictionary }) {
               </Panel>
             ) : (
               <Panel aria-labelledby="groups-title">
-                <PanelTitle id="groups-title">{t.groups.yours}</PanelTitle>
+                {/* The rail's "new group" link is desktop-only, so phones get it here. */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <PanelTitle id="groups-title">{t.groups.yours}</PanelTitle>
+                  <Link href={`/${lang}/groups/new`} className={buttonClass("outline", "text-sm")}>
+                    <Plus className="size-4" strokeWidth={2.75} aria-hidden />
+                    {t.nav.newGroup}
+                  </Link>
+                </div>
                 <ul className="mt-3">
                   {rows.map(({ book, balance }) => (
                     <li key={book.group.id} className="border-line border-b-2 last:border-0">
@@ -154,7 +161,9 @@ async function HomeContent({ lang, t }: { lang: Locale; t: Dictionary }) {
                       >
                         <HullSwatch hull={book.group.hull} className="h-5 w-10" />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate font-bold">{book.group.name}</span>
+                          <span className="line-clamp-2 block font-bold break-words">
+                            {book.group.name}
+                          </span>
                           <span className="text-ink-soft text-sm">
                             {format(t.groups.members, { count: book.group.members.length })}
                           </span>

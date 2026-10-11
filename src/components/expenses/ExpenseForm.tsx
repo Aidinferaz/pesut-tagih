@@ -314,9 +314,9 @@ function ExpenseFormFields({
 
       {method === "equal" && (
         <fieldset>
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <legend className="text-sm font-bold">{t.expenseForm.who}</legend>
-            <div className="flex gap-1">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-2">
+            <legend className="text-sm font-bold whitespace-nowrap">{t.expenseForm.who}</legend>
+            <div className="-mr-2 flex gap-1">
               <Button
                 variant="ghost"
                 className="min-h-9 px-2 text-sm"
