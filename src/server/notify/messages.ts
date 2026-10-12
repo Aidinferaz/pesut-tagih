@@ -99,6 +99,7 @@ const EVENTS = {
     groupLinkHelp:
       "Buat kode di halaman grup Pesut Tagih (khusus admin), lalu kirim /hubungkan <kode> di sini.",
     unlinked: "Oke, Pesut tidak akan mengirim pesan ke sini lagi.",
+    test: "Halo {name}! Kalau pesan ini sampai, Pesut bisa menagih kamu di sini. Jangan senang dulu.",
   },
   en: {
     expenseLogged: "{actor} logged {title} in {group}. Your share is {amount}.",
@@ -116,6 +117,7 @@ const EVENTS = {
     groupLinkHelp:
       "Create a code on the group page in Pesut Tagih (admins only), then send /hubungkan <code> here.",
     unlinked: "Okay, Pesut won't message you here any more.",
+    test: "Hi {name}! If this arrived, Pesut can chase you here. Don't get too comfortable.",
   },
 } as const;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, BellOff, Send } from "lucide-react";
+import { Bell, BellOff, BellRing, Send } from "lucide-react";
 import { useActionState, useEffect, useState, useSyncExternalStore, useTransition } from "react";
 import { Field, FormMessage, TextInput } from "@/components/forms/fields";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +11,7 @@ import {
   createTelegramLink,
   removePushSubscription,
   savePushSubscription,
+  sendTestNotice,
   unlinkTelegram,
   updateChannels,
 } from "@/server/actions/notifications";
@@ -55,6 +56,7 @@ export function NotificationsPanel({
   const push: PushState = !supported ? "unsupported" : subscribed;
   const [busy, startBusy] = useTransition();
   const [linkError, setLinkError] = useState(false);
+  const [test, setTest] = useState<FormState<{ delivered: number }>>({ status: "idle" });
 
   // What this browser can do, and whether it's already subscribed.
   useEffect(() => {
@@ -100,6 +102,8 @@ export function NotificationsPanel({
       if (result.status === "ok") window.open(result.data.url, "_blank", "noopener,noreferrer");
       else setLinkError(true);
     });
+
+  const sendTest = () => startBusy(async () => setTest(await sendTestNotice()));
 
   return (
     <Panel aria-labelledby="notifications-title">
@@ -220,6 +224,31 @@ export function NotificationsPanel({
             {state.status === "ok" && <FormMessage tone="ok">{t.notifications.saved}</FormMessage>}
           </div>
         </form>
+
+        {(telegramBot || vapidKey || whatsappGateway) && (
+          <section className="border-line grid gap-2 border-t-2 pt-4">
+            <div>
+              <Button variant="outline" onClick={sendTest} disabled={busy}>
+                <BellRing className="size-4" aria-hidden />
+                {t.notifications.test}
+              </Button>
+            </div>
+            <p className="text-ink-soft text-sm">{t.notifications.testHint}</p>
+            <div aria-live="polite">
+              {test.status === "ok" &&
+                (test.data.delivered > 0 ? (
+                  <FormMessage tone="ok">
+                    {format(t.notifications.testSent, { count: test.data.delivered })}
+                  </FormMessage>
+                ) : (
+                  <FormMessage tone="error">{t.notifications.testNone}</FormMessage>
+                ))}
+              {test.status === "error" && (
+                <FormMessage tone="error">{t.errors[test.error]}</FormMessage>
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </Panel>
   );

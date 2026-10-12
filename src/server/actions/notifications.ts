@@ -5,6 +5,8 @@ import { z } from "zod";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { getCurrentUser } from "@/server/auth";
 import { env } from "@/server/env";
+import { notifyUser } from "@/server/notify/dispatcher";
+import { eventText } from "@/server/notify/messages";
 import { supabaseAdmin } from "@/server/supabase/admin";
 import { supabaseForUser } from "@/server/supabase/server";
 import { errorKeyFor, type FormState } from "./state";
@@ -150,4 +152,28 @@ export async function updateGroupSettings(
   if (!data?.length) return { status: "error", error: "forbidden" };
   revalidatePath(`/${langOf(formData)}`, "layout");
   return { status: "ok", data: undefined };
+}
+
+/**
+ * Sends "is this thing on?" to yourself on every channel you've switched on.
+ * The dedupe key holds one per minute, so the button can't be used to spam.
+ */
+export async function sendTestNotice(): Promise<FormState<{ delivered: number }>> {
+  const user = await getCurrentUser();
+  if (!user) return { status: "error", error: "notSignedIn" };
+  const { data: profile } = await supabaseAdmin()
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  const name = profile?.display_name ?? "";
+  const delivered = await notifyUser(user.id, {
+    kind: "test",
+    dedupeKey: `test:${user.id}:${Math.floor(Date.now() / 60_000)}`,
+    groupId: null,
+    title: "Pesut Tagih",
+    text: (locale) => eventText(locale, "test", { name }),
+    path: "/settings",
+  });
+  return { status: "ok", data: { delivered } };
 }

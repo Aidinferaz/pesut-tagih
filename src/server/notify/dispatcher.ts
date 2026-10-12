@@ -26,16 +26,17 @@ type Channel = "telegram" | "push" | "whatsapp";
  * Delivers one notice to one person on every channel they've switched on.
  * Runs with the secret key (cron, after-response hooks), never on behalf of a
  * browser request. Each (notice, channel) pair is claimed in notification_log
- * first, so retries and overlapping runs never double-send.
+ * first, so retries and overlapping runs never double-send. Returns how many
+ * channels delivered it.
  */
-export async function notifyUser(userId: string, notice: Notice) {
+export async function notifyUser(userId: string, notice: Notice): Promise<number> {
   const db = supabaseAdmin();
   const [{ data: profile }, { data: channels }, { data: devices }] = await Promise.all([
     db.from("profiles").select("locale").eq("id", userId).maybeSingle(),
     db.from("contact_channels").select("*").eq("user_id", userId).maybeSingle(),
     db.from("push_subscriptions").select("id, endpoint, p256dh, auth").eq("user_id", userId),
   ]);
-  if (!profile || !channels) return;
+  if (!profile || !channels) return 0;
   const locale: Locale = isLocale(profile.locale) ? profile.locale : "id";
   const url = `${env.NEXT_PUBLIC_SITE_URL}/${locale}${notice.path}`;
   const text = notice.text(locale);
@@ -68,6 +69,7 @@ export async function notifyUser(userId: string, notice: Notice) {
     attempts.push(["whatsapp", () => sendWhatsApp(number, `${text}\n${url}`)]);
   }
 
+  let delivered = 0;
   for (const [channel, send] of attempts) {
     const dedupe = `${notice.dedupeKey}:${channel}`;
     const { data: claimed } = await db
@@ -86,11 +88,13 @@ export async function notifyUser(userId: string, notice: Notice) {
       .select("id");
     if (!claimed?.length) continue;
     const ok = await send().catch(() => false);
+    if (ok) delivered += 1;
     await db
       .from("notification_log")
       .update({ ok, error: ok ? null : "send failed" })
       .eq("id", claimed[0].id);
   }
+  return delivered;
 }
 
 /** Posts to a group's linked Telegram chat, once per dedupe key. */

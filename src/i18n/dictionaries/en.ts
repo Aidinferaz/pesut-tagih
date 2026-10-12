@@ -247,6 +247,11 @@ export const en: Dictionary = {
     receive: "Receive on {channel}",
     save: "Save reminders",
     saved: "Saved",
+    test: "Send a test notification",
+    testHint: "Pesut sends one message to every channel switched on above.",
+    testSent: "Sent to {count} channel(s). Check your phone.",
+    testNone:
+      'Nothing went out. Connect a channel, tick "Receive via …", save, then try again (at most once a minute).',
   },
   groupSettings: {
     title: "Group settings",

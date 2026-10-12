@@ -37,11 +37,10 @@ Urutannya penting: Supabase dulu, lalu Google, lalu Vercel.
 
 ## 3. Azure Foundry (otak Pesut)
 
-1. Di resource Azure Foundry kamu, buat dua deployment:
-   - model kecil yang bisa membaca gambar dan memanggil tool (misal `gpt-5-mini`) → `AI_AGENT_MODEL`
-   - model paling murah untuk tugas pendek (misal `gpt-5-nano`) → `AI_FAST_MODEL`
-
-   Isi variabel dengan **nama deployment**, bukan nama model, kalau keduanya berbeda.
+1. Di resource Azure Foundry kamu, buat deployment model yang murah, bisa membaca gambar, dan bisa
+   memanggil tool. Saat ini pilihannya **GPT-6 Luna** (Global Standard). Satu deployment cukup untuk
+   semua tugas: isi `AI_AGENT_MODEL` dan `AI_FAST_MODEL` dengan **nama deployment** yang sama.
+   Kalau nanti ingin memisah tugas ringan ke model yang lebih murah, cukup ganti `AI_FAST_MODEL`.
 
 2. Ambil endpoint dan key dari halaman resource:
    - `AZURE_OPENAI_BASE_URL=https://<resource>.services.ai.azure.com/openai/v1`
@@ -75,7 +74,11 @@ npx web-push generate-vapid-keys
 ```
 
 Isi `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, dan `VAPID_SUBJECT=mailto:email-kamu`.
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY` dan `VAPID_SUBJECT` bertipe biasa (bukan Sensitive), karena kunci
+publik ikut dibundel ke browser; `VAPID_PRIVATE_KEY` bertipe Sensitive. Redeploy setelahnya.
+
 Di iPhone, notifikasi hanya jalan setelah Pesut Tagih ditambahkan ke Layar Utama.
+Uji semua kanal dari **Pengaturan → Pengingat → Kirim notifikasi uji**.
 
 ## 6. WhatsApp lewat Fonnte (opsional)
 

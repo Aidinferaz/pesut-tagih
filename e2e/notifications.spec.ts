@@ -28,6 +28,13 @@ test("connecting Telegram through the bot's /start link", async ({ page, request
   await expect(page.getByText("Tersambung", { exact: true })).toBeVisible();
 });
 
+test("a test notification says when nothing could be sent", async ({ page }) => {
+  await signIn(page, uniqueEmail("tester"));
+  await page.goto("/id/settings");
+  await page.getByRole("button", { name: "Kirim notifikasi uji" }).click();
+  await expect(page.getByText(/Belum ada yang terkirim/)).toBeVisible();
+});
+
 test("the daily job only runs for Vercel Cron", async ({ request }) => {
   expect((await request.get("/api/cron/daily")).status()).toBe(401);
   const run = await request.get("/api/cron/daily", {

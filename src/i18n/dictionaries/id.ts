@@ -251,6 +251,11 @@ export const id = {
     receive: "Terima lewat {channel}",
     save: "Simpan pengingat",
     saved: "Tersimpan",
+    test: "Kirim notifikasi uji",
+    testHint: "Pesut mengirim satu pesan ke semua kanal yang aktif di atas.",
+    testSent: "Terkirim ke {count} kanal. Cek HP-mu.",
+    testNone:
+      'Belum ada yang terkirim. Sambungkan kanal, centang "Terima lewat …", simpan, lalu coba lagi (maksimal sekali per menit).',
   },
   groupSettings: {
     title: "Pengaturan grup",
